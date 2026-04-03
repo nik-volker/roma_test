@@ -4,10 +4,13 @@
 
 // API настройки
 const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const DEFAULT_REMOTE_BACKEND = 'https://psycho-back.vercel.app';
 
 export const API_CONFIG = {
-    // Локально вызываем Flask на 5000, на Vercel используем same-origin /api через vercel.json
+    // Локально вызываем Flask на 5000, в проде сначала пробуем same-origin /api.
     base_url: IS_LOCAL ? 'http://localhost:5000' : '',
+    // Если frontend задеплоен отдельно и /api отсутствует, используем отдельный backend.
+    fallback_base_url: IS_LOCAL ? null : DEFAULT_REMOTE_BACKEND,
     endpoints: {
         health: '/api/health',
         chat: '/api/chat'

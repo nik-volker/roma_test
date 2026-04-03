@@ -5,12 +5,48 @@ import { API_CONFIG } from './constants.js';
 
 export class APIClient {
     constructor() {
-        this.baseUrl = API_CONFIG.base_url;
+        this.baseUrls = [API_CONFIG.base_url, API_CONFIG.fallback_base_url]
+            .filter(Boolean)
+            .filter((url, idx, arr) => arr.indexOf(url) === idx);
+        this.activeBaseUrl = this.baseUrls[0] || '';
+    }
+
+    buildUrl(baseUrl, endpoint) {
+        return `${baseUrl}${endpoint}`;
+    }
+
+    async requestWithFallback(endpoint, options = {}) {
+        let lastError = null;
+
+        for (const baseUrl of this.baseUrls) {
+            const url = this.buildUrl(baseUrl, endpoint);
+
+            try {
+                const response = await fetch(url, options);
+
+                if (response.ok) {
+                    this.activeBaseUrl = baseUrl;
+                    return response;
+                }
+
+                // Для 404 на same-origin пробуем следующий backend.
+                if (response.status === 404) {
+                    lastError = new Error(`Server error: ${response.status}`);
+                    continue;
+                }
+
+                throw new Error(`Server error: ${response.status}`);
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError || new Error('API request failed');
     }
 
     async health() {
         try {
-            const response = await fetch(`${this.baseUrl}${API_CONFIG.endpoints.health}`, {
+            const response = await this.requestWithFallback(API_CONFIG.endpoints.health, {
                 method: 'GET'
             });
             return response.ok;
@@ -22,7 +58,7 @@ export class APIClient {
 
     async sendMessage(message, history = []) {
         try {
-            const response = await fetch(`${this.baseUrl}${API_CONFIG.endpoints.chat}`, {
+            const response = await this.requestWithFallback(API_CONFIG.endpoints.chat, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -32,10 +68,6 @@ export class APIClient {
                     history: history
                 })
             });
-
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
-            }
 
             const data = await response.json();
             return data;
