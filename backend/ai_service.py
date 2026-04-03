@@ -8,7 +8,15 @@ from prompts import SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+_openai_client = None
+
+
+def get_openai_client():
+    """Lazily initialize OpenAI client to avoid top-level external client init."""
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    return _openai_client
 
 
 def call_openai(user_message, conversation_history=None):
@@ -41,6 +49,7 @@ def call_openai(user_message, conversation_history=None):
         messages = conversation_history + [{"role": "user", "content": user_message}]
 
         # Вызываем OpenAI
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "system", "content": SYSTEM_PROMPT}, *messages],

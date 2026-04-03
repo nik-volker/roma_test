@@ -3,12 +3,11 @@
  */
 
 // API настройки
-export const API_CONFIG = {
-    // Локально
-    base_url: 'http://localhost:5000',
+const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-    // Production (GitHub Pages)
-    // base_url: 'https://ai-psycho-backend.onrender.com', // или Railway
+export const API_CONFIG = {
+    // Локально вызываем Flask на 5000, в Vercel используем same-origin (/api/*)
+    base_url: IS_LOCAL ? 'http://localhost:5000' : '',
     endpoints: {
         health: '/api/health',
         chat: '/api/chat'

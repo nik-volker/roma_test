@@ -23,8 +23,8 @@ GPT-4o mini
     ↓ JSON response
 ```
 
-**Frontend:** HTML + CSS + Vanilla JS (GitHub Pages)  
-**Backend:** Flask (Python 3.9+) на Render или Railway  
+**Frontend:** HTML + CSS + Vanilla JS (Vercel Static)  
+**Backend:** Flask (Python 3.9+) как Vercel Python Function  
 **API:** OpenAI GPT-4o mini  
 
 ---
@@ -71,47 +71,29 @@ python -m http.server 8000
 
 Откройте `http://localhost:8000` в браузере.
 
-**Важно:** Обновите `base_url` в `frontend/js/constants.js` на `http://localhost:5000` для локального тестирования.
+`base_url` переключается автоматически:
+- локально: `http://localhost:5000`
+- на Vercel: same-origin (`/api/*`)
 
 ---
 
-## 📦 Развертывание
+## 📦 Развертывание (Vercel, единый проект)
 
-### Backend (выбери один)
+1. Запушь репозиторий на GitHub.
+2. В [Vercel](https://vercel.com/) создай `New Project` и выбери этот репозиторий.
+3. В `Environment Variables` добавь:
+   - `OPENAI_API_KEY` (обязательно)
+   - `FLASK_ENV=production` (опционально)
+   - `CORS_ORIGINS` (опционально, если используешь custom domains)
+4. Нажми `Deploy`.
 
-#### Вариант 1: Render
+Маршрутизация настроена через `vercel.json`:
+- `/api/*` → Flask функция (`api/index.py`)
+- `/` и статические файлы → `frontend/*`
 
-1. Сделай форк репо на GitHub
-2. На [render.com](https://render.com/):
-   - Создай новый Web Service
-   - Укажи git-репо
-   - Build command: `pip install -r requirements.txt`
-   - Start command: `gunicorn app:app`
-   - Добавь env переменную `OPENAI_API_KEY`
-3. После деплоя получишь URL, например: `https://ai-psycho-backend.onrender.com`
-
-#### Вариант 2: Railway
-
-1. На [railway.app](https://railway.app/):
-   - Создай новый проект
-   - Connect repo
-   - Railway автоматически обнаружит `Procfile`
-   - Добавь env переменную `OPENAI_API_KEY`
-
-**Копируй URL бэкенда** (например: `https://ai-psycho-backend.onrender.com`)
-
-### Frontend (GitHub Pages)
-
-1. Обнови `base_url` в `frontend/js/constants.js`:
-   ```javascript
-   base_url: 'https://ai-psycho-backend.onrender.com'
-   ```
-
-2. На GitHub:
-   - Создай репо `username.github.io` (если его нет) или используй существующий
-   - Загрузи содержимое `frontend/` в корень или в папку `/docs`
-   - Включи GitHub Pages в настройках репо
-   - Откройся по `https://username.github.io/` (или `/ai-psycho/` если в подпапке)
+После деплоя:
+1. Проверь `https://<your-project>.vercel.app/api/health`
+2. Открой главную страницу и отправь тестовое сообщение в чат.
 
 ---
 
@@ -174,6 +156,12 @@ ai-psycho/
 │   ├── requirements.txt     # Зависимости
 │   └── Procfile             # Для Render/Railway
 │
+├── api/
+│   └── index.py             # Entrypoint для Vercel Python Function
+├── vercel.json              # Роутинг Vercel (frontend + /api)
+├── .env.example             # Список обязательных/опциональных env
+├── requirements.txt         # Root requirements для Vercel
+│
 └── README.md                # Этот файл
 ```
 
@@ -185,6 +173,22 @@ ai-psycho/
 
 `OPENAI_API_KEY` - API ключ от OpenAI (обязателен)  
 `FLASK_ENV` - `development` или `production` (опционально, по умолчанию `development`)
+`CORS_ORIGINS` - доп. домены через запятую (опционально)
+
+Пример смотри в `.env.example`.
+
+---
+
+## ✅ Pre-Deploy Checklist (Vercel)
+
+- [x] Используются фиксированные patched-версии зависимостей.
+- [x] Учитывается deploy target Vercel (`vercel.json`, `api/index.py`).
+- [x] Нет top-level init внешнего OpenAI клиента (ленивая инициализация).
+- [x] Обязательные env перечислены в `.env.example`.
+- [x] Секреты только на сервере (ключ OpenAI не хранится во фронтенде).
+- [ ] Prisma шаги не применимы для этого проекта (Prisma отсутствует).
+- [ ] Upload/large file flow не применимы для этого проекта (файловый upload отсутствует).
+- [x] Перед деплоем проверять env, routes и runtime endpoints (`/api/health`, `/api/chat`).
 
 ---
 
