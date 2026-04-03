@@ -6,8 +6,8 @@
 const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 export const API_CONFIG = {
-    // Локально вызываем Flask на 5000, в Vercel используем same-origin (/api/*)
-    base_url: IS_LOCAL ? 'http://localhost:5000' : '',
+    // Локально вызываем Flask на 5000, в продакшене обращаемся к отдельному бэкенд-проекту
+    base_url: IS_LOCAL ? 'http://localhost:5000' : 'https://psycho-back.vercel.app',
     endpoints: {
         health: '/api/health',
         chat: '/api/chat'
