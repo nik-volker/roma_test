@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from openai import OpenAI
 from config import OPENAI_API_KEY, MODEL
 from prompts import SYSTEM_PROMPT
@@ -9,6 +10,33 @@ from prompts import SYSTEM_PROMPT
 logger = logging.getLogger(__name__)
 
 _openai_client = None
+
+
+def _extract_json_payload(raw_text):
+    """Best-effort JSON extraction from model output."""
+    if not isinstance(raw_text, str):
+        return None
+
+    text = raw_text.strip()
+
+    # Частый кейс: модель оборачивает JSON в markdown-кодблок.
+    text = re.sub(r"^```(?:json)?\\s*", "", text)
+    text = re.sub(r"\\s*```$", "", text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    start_idx = text.find("{")
+    end_idx = text.rfind("}") + 1
+    if start_idx != -1 and end_idx > start_idx:
+        try:
+            return json.loads(text[start_idx:end_idx])
+        except json.JSONDecodeError:
+            return None
+
+    return None
 
 
 def get_openai_client():
@@ -55,6 +83,7 @@ def call_openai(user_message, conversation_history=None):
             messages=[{"role": "system", "content": SYSTEM_PROMPT}, *messages],
             temperature=0.8,
             max_tokens=500,
+            response_format={"type": "json_object"},
         )
 
         # Извлекаем ответ
@@ -62,34 +91,27 @@ def call_openai(user_message, conversation_history=None):
         logger.info(f"OpenAI response: {assistant_response[:100]}...")
 
         # Парсим JSON
-        try:
-            response_json = json.loads(assistant_response)
-        except json.JSONDecodeError:
+        response_json = _extract_json_payload(assistant_response)
+        if response_json is None:
             logger.error(
                 f"Failed to parse OpenAI response as JSON: {assistant_response}"
             )
-            # Пытаемся найти JSON в ответе
-            start_idx = assistant_response.find("{")
-            end_idx = assistant_response.rfind("}") + 1
-            if start_idx != -1 and end_idx > start_idx:
-                try:
-                    response_json = json.loads(assistant_response[start_idx:end_idx])
-                except json.JSONDecodeError:
-                    response_json = {
-                        "message": assistant_response,
-                        "detected_state": "unknown",
-                        "suggested_technique": "Техника",
-                        "technique_description": "Попробуй ещё раз",
-                        "risk_level": "none",
-                    }
-            else:
-                response_json = {
-                    "message": assistant_response,
-                    "detected_state": "unknown",
-                    "suggested_technique": "Техника",
-                    "technique_description": "Попробуй ещё раз",
-                    "risk_level": "none",
-                }
+            response_json = {
+                "message": assistant_response,
+                "detected_state": "unknown",
+                "suggested_technique": "Техника",
+                "technique_description": "Попробуй ещё раз",
+                "risk_level": "none",
+            }
+
+        # Защита от частично заполненного JSON
+        response_json.setdefault(
+            "message", "Я рядом. Расскажи чуть подробнее, что происходит."
+        )
+        response_json.setdefault("detected_state", "unknown")
+        response_json.setdefault("suggested_technique", "Техника")
+        response_json.setdefault("technique_description", "Попробуй ещё раз")
+        response_json.setdefault("risk_level", "none")
 
         return response_json
 

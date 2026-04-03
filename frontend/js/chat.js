@@ -21,14 +21,17 @@ export class ChatUI {
     }
 
     addAIResponse(response) {
-        const state = response.detected_state;
+        const state = response?.detected_state || 'unknown';
         const stateLabel = STATES[state] || state;
         const stateColor = STATE_COLORS[state] || '#999';
+        const aiMessage = response?.message || 'Я рядом. Расскажи чуть подробнее, что происходит.';
+        const suggestedTechnique = response?.suggested_technique || 'Техника';
+        const techniqueDescription = response?.technique_description || 'Попробуй ещё раз';
 
         // Основное сообщение
         const messageEl = document.createElement('div');
         messageEl.className = 'message message-ai';
-        messageEl.innerHTML = `<p>${this.escapeHtml(response.message)}</p>`;
+        messageEl.innerHTML = `<p>${this.escapeHtml(aiMessage)}</p>`;
         this.chatContainer.appendChild(messageEl);
 
         // Блок с состоянием и техникой
@@ -39,8 +42,8 @@ export class ChatUI {
                 <strong>Состояние:</strong> ${this.escapeHtml(stateLabel)}
             </div>
             <div class="technique-suggestion">
-                <strong>💡 Техника:</strong> <em>${this.escapeHtml(response.suggested_technique)}</em><br>
-                <span class="technique-desc">${this.escapeHtml(response.technique_description)}</span>
+                <strong>💡 Техника:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
+                <span class="technique-desc">${this.escapeHtml(techniqueDescription)}</span>
             </div>
         `;
         this.chatContainer.appendChild(infoEl);
