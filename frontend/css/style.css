@@ -550,6 +550,7 @@ html[lang="ru"] .credits-line--en {
 
     #message-input {
         width: 100%;
+        height: 96px;
     }
 
     .button-group {
