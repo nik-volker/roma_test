@@ -38,11 +38,12 @@ class App {
             }
         });
 
-        document.querySelectorAll('.lang-button').forEach((button) => {
-            button.addEventListener('click', () => {
-                this.setLanguage(button.dataset.lang);
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) {
+            langSelect.addEventListener('change', (event) => {
+                this.setLanguage(event.target.value);
             });
-        });
+        }
 
         const clearButton = document.getElementById('clear-button');
         if (clearButton) {
@@ -95,11 +96,10 @@ class App {
         this.chat.sendButton.textContent = this.t('send');
         document.getElementById('clear-button').textContent = this.t('clear');
 
-        document.querySelectorAll('.lang-button').forEach((button) => {
-            const isActive = button.dataset.lang === this.language;
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) {
+            langSelect.value = this.language;
+        }
 
         this.chat.setLanguage(this.language);
     }

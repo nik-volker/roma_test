@@ -27,11 +27,14 @@
             </div>
 
             <div class="toolbar">
-                <div class="lang-switch" role="group" aria-label="Language switcher">
-                    <button type="button" class="lang-button" data-lang="en">En</button>
-                    <button type="button" class="lang-button" data-lang="ru">Ru</button>
-                </div>
                 <button id="clear-button" type="button">Clear</button>
+                <div class="lang-switch">
+                    <label class="sr-only" for="lang-select">Language</label>
+                    <select id="lang-select" aria-label="Language switcher">
+                        <option value="en">En</option>
+                        <option value="ru">Ru</option>
+                    </select>
+                </div>
             </div>
         </header>
 

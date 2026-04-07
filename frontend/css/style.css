@@ -173,49 +173,36 @@ input {
 
 .toolbar {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
 }
 
 .lang-switch {
     border-radius: 999px;
     background: rgba(21, 17, 46, 0.76);
     border: 1px solid rgba(172, 143, 255, 0.24);
-}
-
-.lang-switch {
+    padding: 0 10px;
+    height: 36px;
     display: inline-flex;
-    padding: 4px;
-    gap: 4px;
+    align-items: center;
 }
 
-.lang-button {
-    min-width: 52px;
-    padding: 9px 13px;
+#lang-select {
     border: none;
-    border-radius: 999px;
     background: transparent;
-    color: #c6bfeb;
+    color: #d9d2ff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    min-width: 52px;
+    outline: none;
     cursor: pointer;
-    font-weight: 800;
-    transition: background-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
-}
-
-.lang-button:hover {
-    transform: translateY(-1px);
-}
-
-.lang-button.is-active {
-    background: linear-gradient(135deg, rgba(141, 100, 255, 0.95) 0%, rgba(107, 72, 238, 0.95) 100%);
-    color: #f7f3ff;
-    box-shadow: 0 8px 18px rgba(95, 53, 220, 0.35);
 }
 
 .toolbar #clear-button {
-    min-width: 116px;
-    height: 42px;
-    padding: 0 14px;
+    min-width: 86px;
+    height: 36px;
+    padding: 0 12px;
     border-radius: 999px;
     border: 1px solid rgba(122, 219, 255, 0.34);
     background: rgba(35, 136, 209, 0.2);
@@ -515,7 +502,7 @@ input {
     }
 
     .toolbar {
-        align-items: flex-start;
+        align-items: center;
     }
 
     .brand-block h1 {
@@ -547,16 +534,11 @@ input {
     }
 
     .toolbar {
-        flex-direction: column;
-        align-items: stretch;
+        justify-content: flex-start;
     }
 
     .lang-switch {
-        align-self: center;
-    }
-
-    .toolbar #clear-button {
-        width: 100%;
+        align-self: auto;
     }
 
     .state-indicator-wrapper {
