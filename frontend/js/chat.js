@@ -22,6 +22,8 @@ export class ChatUI {
 
     addAIResponse(response) {
         const state = response?.detected_state || 'unknown';
+        const hasKnownState = Object.prototype.hasOwnProperty.call(STATES, state);
+        const showState = state !== 'unknown' && state !== 'crisis' && hasKnownState;
         const stateLabel = STATES[state] || state;
         const stateColor = STATE_COLORS[state] || '#999';
         const aiMessage = response?.message || 'Я рядом. Расскажи чуть подробнее, что происходит.';
@@ -38,9 +40,11 @@ export class ChatUI {
         const infoEl = document.createElement('div');
         infoEl.className = 'ai-info-block';
         infoEl.innerHTML = `
+            ${showState ? `
             <div class="state-tag" style="background-color: ${stateColor}">
                 <strong>Состояние:</strong> ${this.escapeHtml(stateLabel)}
             </div>
+            ` : ''}
             <div class="technique-suggestion">
                 <strong>💡 Техника:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
                 <span class="technique-desc">${this.escapeHtml(techniqueDescription)}</span>
