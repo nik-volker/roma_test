@@ -49,7 +49,9 @@ def get_crisis_response(language="en"):
 
     if current_language == "ru":
         suggested_technique = "Экстренная поддержка"
-        technique_description = "Сразу обратись к живому специалисту или в экстренные службы."
+        technique_description = (
+            "Сразу обратись к живому специалисту или в экстренные службы."
+        )
     else:
         suggested_technique = "Emergency support"
         technique_description = "Contact a live professional, crisis line, or emergency services immediately."

@@ -9,10 +9,12 @@ export class ChatUI {
         this.messageInput = document.getElementById('message-input');
         this.sendButton = document.getElementById('send-button');
         this.stateIndicator = document.getElementById('state-indicator');
+        this.stateIndicatorWrapper = document.querySelector('.state-indicator-wrapper');
         this.translations = translations;
         this.stateLabels = stateLabels;
         this.currentLanguage = language;
         this.currentStateMeta = null;
+        this.syncStateIndicatorVisibility();
     }
 
     setLanguage(language) {
@@ -87,6 +89,16 @@ export class ChatUI {
                 ${this.escapeHtml(label)}
             </span>
         `;
+        this.syncStateIndicatorVisibility();
+    }
+
+    syncStateIndicatorVisibility() {
+        if (!this.stateIndicatorWrapper) {
+            return;
+        }
+
+        const hasVisibleState = Boolean(this.currentStateMeta);
+        this.stateIndicatorWrapper.classList.toggle('is-hidden', !hasVisibleState);
     }
 
     clearInput() {
@@ -143,5 +155,6 @@ export class ChatUI {
         this.chatContainer.innerHTML = '';
         this.stateIndicator.innerHTML = '';
         this.currentStateMeta = null;
+        this.syncStateIndicatorVisibility();
     }
 }

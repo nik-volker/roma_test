@@ -136,6 +136,7 @@ If you are in immediate danger, call emergency services now.""",
 def get_crisis_message(language="en"):
     return CRISIS_MESSAGES[normalize_language(language)]
 
+
 TECHNIQUES = {
     "anxiety_in_relationship": {
         "name": "Box Breathing",

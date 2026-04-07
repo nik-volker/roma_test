@@ -115,7 +115,10 @@ def call_openai(user_message, conversation_history=None, language="en"):
         client = get_openai_client()
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "system", "content": get_system_prompt(current_language)}, *messages],
+            messages=[
+                {"role": "system", "content": get_system_prompt(current_language)},
+                *messages,
+            ],
             temperature=0.8,
             max_tokens=500,
             response_format={"type": "json_object"},

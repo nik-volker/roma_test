@@ -37,7 +37,8 @@ body {
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.75), transparent 28%),
         radial-gradient(circle at right 18%, rgba(202, 166, 133, 0.18), transparent 22%),
         linear-gradient(180deg, #f4ede6 0%, #efe4d8 42%, #f7f0e9 100%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 button,
@@ -190,6 +191,10 @@ input {
     gap: 16px;
     border-radius: var(--radius-lg);
     padding: 16px 22px;
+}
+
+.state-indicator-wrapper.is-hidden {
+    display: none;
 }
 
 .state-indicator-label {
