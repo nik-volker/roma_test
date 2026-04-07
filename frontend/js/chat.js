@@ -51,7 +51,8 @@ export class ChatUI {
         const stateColor = STATE_COLORS[state] || '#999';
         const aiMessage = response?.message || this.translate('errorFallback');
         const rawTechnique = response?.suggested_technique;
-        const hasTechnique = rawTechnique && rawTechnique !== 'none' && rawTechnique !== 'null';
+        const invalidTechniques = ['none', 'null', 'unknown', 'undefined', ''];
+        const hasTechnique = rawTechnique && !invalidTechniques.includes(rawTechnique.toLowerCase().trim());
         const suggestedTechnique = hasTechnique ? rawTechnique : null;
         const techniqueDescription = hasTechnique ? (response?.technique_description || '') : null;
 
