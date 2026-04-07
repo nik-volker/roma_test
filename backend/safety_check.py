@@ -41,14 +41,23 @@ def check_crisis(message):
     return "none", None
 
 
-def get_crisis_response():
+def get_crisis_response(language="en"):
     """Возвращает кризисный ответ"""
-    from prompts import CRISIS_MESSAGE
+    from prompts import get_crisis_message, normalize_language
+
+    current_language = normalize_language(language)
+
+    if current_language == "ru":
+        suggested_technique = "Экстренная поддержка"
+        technique_description = "Сразу обратись к живому специалисту или в экстренные службы."
+    else:
+        suggested_technique = "Emergency support"
+        technique_description = "Contact a live professional, crisis line, or emergency services immediately."
 
     return {
-        "message": CRISIS_MESSAGE,
+        "message": get_crisis_message(current_language),
         "detected_state": "crisis",
-        "suggested_technique": "Emergency",
-        "technique_description": "Обратись к специалисту",
+        "suggested_technique": suggested_technique,
+        "technique_description": technique_description,
         "risk_level": "high",
     }

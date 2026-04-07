@@ -5,7 +5,7 @@ import logging
 import re
 from openai import OpenAI
 from config import OPENAI_API_KEY, MODEL
-from prompts import SYSTEM_PROMPT
+from prompts import get_system_prompt, normalize_language
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,34 @@ def get_openai_client():
     return _openai_client
 
 
-def call_openai(user_message, conversation_history=None):
+def _default_response(language, message=None, technique=None, description=None):
+    current_language = normalize_language(language)
+
+    defaults = {
+        "en": {
+            "message": "I am here with you. Tell me a little more about what is happening.",
+            "technique": "Grounding pause",
+            "description": "Take one slow breath, then describe the situation in one short sentence.",
+        },
+        "ru": {
+            "message": "Я рядом. Расскажи чуть подробнее, что сейчас происходит.",
+            "technique": "Пауза на опору",
+            "description": "Сделай один медленный вдох и опиши ситуацию одной короткой фразой.",
+        },
+    }
+
+    localized = defaults[current_language]
+
+    return {
+        "message": message or localized["message"],
+        "detected_state": "unknown",
+        "suggested_technique": technique or localized["technique"],
+        "technique_description": description or localized["description"],
+        "risk_level": "none",
+    }
+
+
+def call_openai(user_message, conversation_history=None, language="en"):
     """
     Отправляет сообщение в OpenAI и получает ответ в формате JSON.
 
@@ -58,15 +85,23 @@ def call_openai(user_message, conversation_history=None):
     Returns:
         dict с полями: message, detected_state, suggested_technique, technique_description, risk_level
     """
+    current_language = normalize_language(language)
+
     if not OPENAI_API_KEY:
         logger.error("OPENAI_API_KEY is not set")
-        return {
-            "message": "Ошибка: API ключ не установлен",
-            "detected_state": "unknown",
-            "suggested_technique": "Error",
-            "technique_description": "Проверьте конфигурацию",
-            "risk_level": "none",
-        }
+        if current_language == "ru":
+            return _default_response(
+                current_language,
+                message="Ошибка: API ключ не установлен.",
+                technique="Проверка конфигурации",
+                description="Проверь настройки backend и переменную OPENAI_API_KEY.",
+            )
+        return _default_response(
+            current_language,
+            message="Error: API key is not configured.",
+            technique="Configuration check",
+            description="Verify the backend configuration and OPENAI_API_KEY.",
+        )
 
     try:
         # Подготавливаем history
@@ -80,7 +115,7 @@ def call_openai(user_message, conversation_history=None):
         client = get_openai_client()
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}, *messages],
+            messages=[{"role": "system", "content": get_system_prompt(current_language)}, *messages],
             temperature=0.8,
             max_tokens=500,
             response_format={"type": "json_object"},
@@ -96,31 +131,29 @@ def call_openai(user_message, conversation_history=None):
             logger.error(
                 f"Failed to parse OpenAI response as JSON: {assistant_response}"
             )
-            response_json = {
-                "message": assistant_response,
-                "detected_state": "unknown",
-                "suggested_technique": "Техника",
-                "technique_description": "Попробуй ещё раз",
-                "risk_level": "none",
-            }
+            response_json = _default_response(
+                current_language,
+                message=assistant_response,
+            )
 
-        # Защита от частично заполненного JSON
-        response_json.setdefault(
-            "message", "Я рядом. Расскажи чуть подробнее, что происходит."
-        )
-        response_json.setdefault("detected_state", "unknown")
-        response_json.setdefault("suggested_technique", "Техника")
-        response_json.setdefault("technique_description", "Попробуй ещё раз")
-        response_json.setdefault("risk_level", "none")
+        defaults = _default_response(current_language)
+        for key, value in defaults.items():
+            response_json.setdefault(key, value)
 
         return response_json
 
     except Exception as e:
         logger.error(f"OpenAI API error: {str(e)}")
-        return {
-            "message": f"Ошибка при обращении к AI: {str(e)}",
-            "detected_state": "unknown",
-            "suggested_technique": "Error",
-            "technique_description": "Попробуйте позже",
-            "risk_level": "none",
-        }
+        if current_language == "ru":
+            return _default_response(
+                current_language,
+                message=f"Ошибка при обращении к AI: {str(e)}",
+                technique="Повторить позже",
+                description="Попробуйте ещё раз немного позже.",
+            )
+        return _default_response(
+            current_language,
+            message=f"Error while contacting the AI service: {str(e)}",
+            technique="Try again later",
+            description="Please try sending the message again in a moment.",
+        )

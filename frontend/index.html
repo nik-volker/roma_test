@@ -1,42 +1,60 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Психолог | Помощь в отношениях</title>
+    <title>AI Relationship Consultant | Thoughtful relationship support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div class="container">
-        <!-- Заголовок -->
-        <div class="header">
-            <h1>💭 AI Психолог</h1>
-            <p>Поддержка в вопросах отношений</p>
-        </div>
+    <div class="app-shell">
+        <div class="ambient ambient-left" aria-hidden="true"></div>
+        <div class="ambient ambient-right" aria-hidden="true"></div>
 
-        <!-- Индикатор состояния -->
+        <header class="topbar">
+            <div class="brand-block">
+                <span class="brand-eyebrow" data-i18n="brandEyebrow">AI relationship consultant</span>
+                <h1 data-i18n="brandTitle">Relationship clarity, one message at a time</h1>
+                <p data-i18n="brandSubtitle">Reflect on difficult moments, get grounded questions, and receive practical techniques for your next step.</p>
+            </div>
+
+            <div class="toolbar">
+                <div class="privacy-pill" data-i18n="privacyBadge">Private in your browser</div>
+                <div class="lang-switch" role="group" aria-label="Language switcher">
+                    <button type="button" class="lang-button" data-lang="en">En</button>
+                    <button type="button" class="lang-button" data-lang="ru">Ru</button>
+                </div>
+            </div>
+        </header>
+
         <div class="state-indicator-wrapper">
+            <div class="state-indicator-label" data-i18n="currentStateLabel">Current state</div>
             <div id="state-indicator"></div>
         </div>
 
-        <!-- Основной контейнер чата -->
-        <div class="chat-wrapper">
-            <div id="chat-container"></div>
-        </div>
+        <main class="chat-layout">
+            <section class="chat-wrapper">
+                <div id="chat-container"></div>
+            </section>
+        </main>
 
-        <!-- Input область -->
-        <div class="input-area">
-            <input type="text" id="message-input" placeholder="Расскажи, что тебя беспокоит..." autocomplete="off">
-            <div class="button-group">
-                <button id="send-button">Отправить</button>
-                <button id="clear-button">Очистить</button>
+        <footer class="input-area">
+            <label class="sr-only" id="message-input-label" for="message-input" data-i18n="messageLabel">Your message</label>
+            <div class="input-panel">
+                <input type="text" id="message-input" placeholder="Tell me what is happening in your relationship..." autocomplete="off">
+                <div class="button-group">
+                    <button id="clear-button" type="button">Clear</button>
+                    <button id="send-button" type="button">Send</button>
+                </div>
             </div>
-        </div>
+        </footer>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="js/app.js"></script>
 </body>
 

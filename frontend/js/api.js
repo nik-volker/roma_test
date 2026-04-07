@@ -56,17 +56,23 @@ export class APIClient {
         }
     }
 
-    async sendMessage(message, history = []) {
+    async sendMessage(message, history = [], language = null) {
         try {
+            const payload = {
+                message: message,
+                history: history
+            };
+
+            if (language) {
+                payload.language = language;
+            }
+
             const response = await this.requestWithFallback(API_CONFIG.endpoints.chat, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    message: message,
-                    history: history
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();

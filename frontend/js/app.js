@@ -3,27 +3,32 @@
  */
 import { APIClient } from './api.js';
 import { ChatUI } from './chat.js';
+import { STATE_LABELS, STORAGE_KEYS, SUPPORTED_LANGUAGES, UI_TEXT } from './constants.js';
 
 class App {
     constructor() {
         this.api = new APIClient();
-        this.chat = new ChatUI();
+        this.language = this.getInitialLanguage();
+        this.chat = new ChatUI({
+            language: this.language,
+            translations: UI_TEXT,
+            stateLabels: STATE_LABELS
+        });
         this.init();
     }
 
     async init() {
         console.log('Initalizing app...');
 
-        // Проверяем, доступен ли сервер
+        this.applyLanguage();
+
         const isHealthy = await this.api.health();
         if (!isHealthy) {
             console.warn('Backend is not available. Using local mode or will try later.');
         }
 
-        // Загружаем сохранённую историю из localStorage
         this.loadChatHistory();
 
-        // Обработчики событий
         this.chat.sendButton.addEventListener('click', () => this.sendMessage());
         this.chat.messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -32,12 +37,18 @@ class App {
             }
         });
 
-        // Кнопка "Очистить чат"
+        document.querySelectorAll('.lang-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.setLanguage(button.dataset.lang);
+            });
+        });
+
         const clearButton = document.getElementById('clear-button');
         if (clearButton) {
             clearButton.addEventListener('click', () => {
-                if (confirm('Вы уверены? История чата будет удалена.')) {
+                if (window.confirm(this.t('clearChatConfirm'))) {
                     this.chat.clearChat();
+                    localStorage.removeItem(STORAGE_KEYS.chatHistory);
                 }
             });
         }
@@ -45,35 +56,76 @@ class App {
         console.log('App initialized');
     }
 
+    getInitialLanguage() {
+        const savedLanguage = localStorage.getItem(STORAGE_KEYS.language);
+
+        if (SUPPORTED_LANGUAGES.includes(savedLanguage)) {
+            return savedLanguage;
+        }
+
+        return 'en';
+    }
+
+    t(key) {
+        return UI_TEXT[this.language]?.[key] || key;
+    }
+
+    setLanguage(language) {
+        if (!SUPPORTED_LANGUAGES.includes(language) || language === this.language) {
+            return;
+        }
+
+        this.language = language;
+        localStorage.setItem(STORAGE_KEYS.language, language);
+        this.applyLanguage();
+    }
+
+    applyLanguage() {
+        document.documentElement.lang = this.language;
+        document.title = this.t('pageTitle');
+
+        document.querySelectorAll('[data-i18n]').forEach((element) => {
+            const key = element.dataset.i18n;
+            element.textContent = this.t(key);
+        });
+
+        this.chat.messageInput.placeholder = this.t('messagePlaceholder');
+        this.chat.sendButton.textContent = this.t('send');
+        document.getElementById('clear-button').textContent = this.t('clear');
+
+        document.querySelectorAll('.lang-button').forEach((button) => {
+            const isActive = button.dataset.lang === this.language;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        this.chat.setLanguage(this.language);
+    }
+
     async sendMessage() {
         const message = this.chat.messageInput.value.trim();
 
         if (!message) {
-            alert('Напишите сообщение');
+            window.alert(this.t('emptyMessageAlert'));
             return;
         }
 
-        // Отправляем сообщение в UI
         this.chat.addMessage(message, 'user');
         this.chat.clearInput();
         this.chat.disableSending(true);
 
         try {
-            // Получаем историю для отправки серверу
             const history = this.chat.getChatHistory();
 
-            // Отправляем на API
-            const response = await this.api.sendMessage(message, history);
+            const response = await this.api.sendMessage(message, history, this.language);
 
-            // Добавляем ответ в UI
             this.chat.addAIResponse(response);
 
-            // Сохраняем историю в localStorage
             this.saveChatHistory();
 
         } catch (error) {
             console.error('Error:', error);
-            this.chat.showError(error.message || 'Ошибка при обращении к серверу');
+            this.chat.showError(error.message || this.t('errorFallback'));
         } finally {
             this.chat.disableSending(false);
             this.chat.messageInput.focus();
@@ -92,11 +144,11 @@ class App {
                 }
             }
         });
-        localStorage.setItem('chatHistory', JSON.stringify(messages));
+        localStorage.setItem(STORAGE_KEYS.chatHistory, JSON.stringify(messages));
     }
 
     loadChatHistory() {
-        const saved = localStorage.getItem('chatHistory');
+        const saved = localStorage.getItem(STORAGE_KEYS.chatHistory);
         if (saved) {
             try {
                 const messages = JSON.parse(saved);

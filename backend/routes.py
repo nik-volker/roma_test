@@ -4,6 +4,7 @@ import logging
 from flask import Blueprint, request, jsonify
 from ai_service import call_openai
 from safety_check import check_crisis, get_crisis_response
+from prompts import normalize_language
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ def chat():
     Ожидает:
     {
         "message": "текст сообщения",
-        "history": [{"role": "user", "content": "..."}, ...]  # опционально
+        "history": [{"role": "user", "content": "..."}, ...],  # опционально
+        "language": "en" | "ru"  # опционально
     }
 
     Возвращает:
@@ -37,13 +39,14 @@ def chat():
     }
     """
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
 
         if not data or "message" not in data:
             return jsonify({"error": "Missing 'message' field"}), 400
 
         user_message = data.get("message", "").strip()
         conversation_history = data.get("history", [])
+        language = normalize_language(data.get("language"))
 
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
@@ -53,10 +56,9 @@ def chat():
 
         if risk_level == "high":
             logger.warning(f"Crisis detected: {crisis_keyword}")
-            return jsonify(get_crisis_response()), 200
+            return jsonify(get_crisis_response(language=language)), 200
 
-        # 2. Вызываем OpenAI
-        ai_response = call_openai(user_message, conversation_history)
+        ai_response = call_openai(user_message, conversation_history, language=language)
 
         logger.info(
             f"Chat response: detected_state={ai_response.get('detected_state')}"

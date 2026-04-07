@@ -1,15 +1,36 @@
 /**
  * chat.js - UI логика чата
  */
-import { STATES, STATE_COLORS } from './constants.js';
+import { STATE_COLORS } from './constants.js';
 
 export class ChatUI {
-    constructor() {
+    constructor({ language = 'en', translations = {}, stateLabels = {} } = {}) {
         this.chatContainer = document.getElementById('chat-container');
         this.messageInput = document.getElementById('message-input');
         this.sendButton = document.getElementById('send-button');
         this.stateIndicator = document.getElementById('state-indicator');
-        this.techniqueBox = document.getElementById('technique-box');
+        this.translations = translations;
+        this.stateLabels = stateLabels;
+        this.currentLanguage = language;
+        this.currentStateMeta = null;
+    }
+
+    setLanguage(language) {
+        this.currentLanguage = language;
+        this.disableSending(this.sendButton.disabled);
+
+        if (this.currentStateMeta) {
+            const { state, color } = this.currentStateMeta;
+            this.updateStateIndicator(state, this.getStateLabel(state), color);
+        }
+    }
+
+    translate(key) {
+        return this.translations?.[this.currentLanguage]?.[key] || key;
+    }
+
+    getStateLabel(state) {
+        return this.stateLabels?.[this.currentLanguage]?.[state] || state;
     }
 
     addMessage(text, sender = 'user') {
@@ -22,49 +43,47 @@ export class ChatUI {
 
     addAIResponse(response) {
         const state = response?.detected_state || 'unknown';
-        const hasKnownState = Object.prototype.hasOwnProperty.call(STATES, state);
+        const hasKnownState = Object.prototype.hasOwnProperty.call(this.stateLabels?.[this.currentLanguage] || {}, state);
         const showState = state !== 'unknown' && state !== 'crisis' && hasKnownState;
-        const stateLabel = STATES[state] || state;
+        const stateLabel = this.getStateLabel(state);
         const stateColor = STATE_COLORS[state] || '#999';
-        const aiMessage = response?.message || 'Я рядом. Расскажи чуть подробнее, что происходит.';
-        const suggestedTechnique = response?.suggested_technique || 'Техника';
-        const techniqueDescription = response?.technique_description || 'Попробуй ещё раз';
+        const aiMessage = response?.message || this.translate('errorFallback');
+        const suggestedTechnique = response?.suggested_technique || this.translate('techniqueLabel');
+        const techniqueDescription = response?.technique_description || this.translate('unknownState');
 
-        // Основное сообщение
         const messageEl = document.createElement('div');
         messageEl.className = 'message message-ai';
         messageEl.innerHTML = `<p>${this.escapeHtml(aiMessage)}</p>`;
         this.chatContainer.appendChild(messageEl);
 
-        // Блок с состоянием и техникой
         const infoEl = document.createElement('div');
         infoEl.className = 'ai-info-block';
         infoEl.innerHTML = `
             ${showState ? `
             <div class="state-tag" style="background-color: ${stateColor}">
-                <strong>Состояние:</strong> ${this.escapeHtml(stateLabel)}
+                <strong>${this.escapeHtml(this.translate('stateLabel'))}:</strong> ${this.escapeHtml(stateLabel)}
             </div>
             ` : ''}
             <div class="technique-suggestion">
-                <strong>💡 Техника:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
+                <strong>${this.escapeHtml(this.translate('techniqueLabel'))}:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
                 <span class="technique-desc">${this.escapeHtml(techniqueDescription)}</span>
             </div>
         `;
         this.chatContainer.appendChild(infoEl);
 
-        // Обновляем индикатор вверху
         if (state !== 'unknown' && state !== 'crisis') {
             this.updateStateIndicator(state, stateLabel, stateColor);
         } else if (state === 'crisis') {
-            this.updateStateIndicator(state, '⚠️ КРИЗИС', '#FF3333');
+            this.updateStateIndicator(state, this.translate('crisisState'), '#B94A48');
         }
 
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }
 
     updateStateIndicator(state, label, color) {
+        this.currentStateMeta = { state, color };
         this.stateIndicator.innerHTML = `
-            <span style="background-color: ${color}; padding: 5px 10px; border-radius: 5px; color: white;">
+            <span class="state-indicator-pill" style="background-color: ${color};">
                 ${this.escapeHtml(label)}
             </span>
         `;
@@ -78,9 +97,9 @@ export class ChatUI {
     disableSending(disabled = true) {
         this.sendButton.disabled = disabled;
         if (disabled) {
-            this.sendButton.textContent = 'Отправляю...';
+            this.sendButton.textContent = this.translate('sending');
         } else {
-            this.sendButton.textContent = 'Отправить';
+            this.sendButton.textContent = this.translate('send');
         }
     }
 
@@ -115,7 +134,7 @@ export class ChatUI {
     showError(errorText) {
         const errorEl = document.createElement('div');
         errorEl.className = 'message message-error';
-        errorEl.innerHTML = `<p>❌ ${this.escapeHtml(errorText)}</p>`;
+        errorEl.innerHTML = `<p>${this.escapeHtml(errorText)}</p>`;
         this.chatContainer.appendChild(errorEl);
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }
@@ -123,6 +142,6 @@ export class ChatUI {
     clearChat() {
         this.chatContainer.innerHTML = '';
         this.stateIndicator.innerHTML = '';
-        localStorage.removeItem('chatHistory');
+        this.currentStateMeta = null;
     }
 }

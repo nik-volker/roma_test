@@ -25,7 +25,7 @@ print("\n" + "=" * 60)
 print("TEST 2: /api/chat - Normal message")
 print("=" * 60)
 try:
-    payload = {"message": "Мы не разговариваем друг с другом 3 дня"}
+    payload = {"message": "We have not really talked for three days", "language": "en"}
     resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
     print(f"Status: {resp.status_code}")
     result = resp.json()
@@ -34,12 +34,26 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 
-# Test 3: Crisis detection
+# Test 3: Backward compatibility without language
 print("\n" + "=" * 60)
-print("TEST 3: /api/chat - Crisis message")
+print("TEST 3: /api/chat - Backward compatibility")
 print("=" * 60)
 try:
-    payload = {"message": "Я не хочу жить"}
+    payload = {"message": "Мы почти перестали нормально общаться"}
+    resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
+    print(f"Status: {resp.status_code}")
+    result = resp.json()
+    print("Response:")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+except Exception as e:
+    print(f"Error: {e}")
+
+# Test 4: Crisis detection
+print("\n" + "=" * 60)
+print("TEST 4: /api/chat - Crisis message")
+print("=" * 60)
+try:
+    payload = {"message": "Я не хочу жить", "language": "ru"}
     resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
     print(f"Status: {resp.status_code}")
     result = resp.json()
