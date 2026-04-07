@@ -50,8 +50,10 @@ export class ChatUI {
         const stateLabel = this.getStateLabel(state);
         const stateColor = STATE_COLORS[state] || '#999';
         const aiMessage = response?.message || this.translate('errorFallback');
-        const suggestedTechnique = response?.suggested_technique || this.translate('techniqueLabel');
-        const techniqueDescription = response?.technique_description || this.translate('unknownState');
+        const rawTechnique = response?.suggested_technique;
+        const hasTechnique = rawTechnique && rawTechnique !== 'none' && rawTechnique !== 'null';
+        const suggestedTechnique = hasTechnique ? rawTechnique : null;
+        const techniqueDescription = hasTechnique ? (response?.technique_description || '') : null;
 
         const messageEl = document.createElement('div');
         messageEl.className = 'message message-ai';
@@ -66,10 +68,12 @@ export class ChatUI {
                 <strong>${this.escapeHtml(this.translate('stateLabel'))}:</strong> ${this.escapeHtml(stateLabel)}
             </div>
             ` : ''}
+            ${hasTechnique ? `
             <div class="technique-suggestion">
                 <strong>${this.escapeHtml(this.translate('techniqueLabel'))}:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
                 <span class="technique-desc">${this.escapeHtml(techniqueDescription)}</span>
             </div>
+            ` : ''}
         `;
         this.chatContainer.appendChild(infoEl);
 
