@@ -8,23 +8,15 @@ export class ChatUI {
         this.chatContainer = document.getElementById('chat-container');
         this.messageInput = document.getElementById('message-input');
         this.sendButton = document.getElementById('send-button');
-        this.stateIndicator = document.getElementById('state-indicator');
-        this.stateIndicatorWrapper = document.querySelector('.state-indicator-wrapper');
         this.translations = translations;
         this.stateLabels = stateLabels;
         this.currentLanguage = language;
         this.currentStateMeta = null;
-        this.syncStateIndicatorVisibility();
     }
 
     setLanguage(language) {
         this.currentLanguage = language;
         this.disableSending(this.sendButton.disabled);
-
-        if (this.currentStateMeta) {
-            const { state, color } = this.currentStateMeta;
-            this.updateStateIndicator(state, this.getStateLabel(state), color);
-        }
     }
 
     translate(key) {
@@ -79,31 +71,12 @@ export class ChatUI {
         this.chatContainer.appendChild(infoEl);
 
         if (state !== 'unknown' && state !== 'crisis') {
-            this.updateStateIndicator(state, stateLabel, stateColor);
+            this.currentStateMeta = { state, color: stateColor };
         } else if (state === 'crisis') {
-            this.updateStateIndicator(state, this.translate('crisisState'), '#B94A48');
+            this.currentStateMeta = { state, color: '#B94A48' };
         }
 
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
-    }
-
-    updateStateIndicator(state, label, color) {
-        this.currentStateMeta = { state, color };
-        this.stateIndicator.innerHTML = `
-            <span class="state-indicator-pill" style="background-color: ${color};">
-                ${this.escapeHtml(label)}
-            </span>
-        `;
-        this.syncStateIndicatorVisibility();
-    }
-
-    syncStateIndicatorVisibility() {
-        if (!this.stateIndicatorWrapper) {
-            return;
-        }
-
-        const hasVisibleState = Boolean(this.currentStateMeta);
-        this.stateIndicatorWrapper.classList.toggle('is-hidden', !hasVisibleState);
     }
 
     clearInput() {
@@ -158,8 +131,6 @@ export class ChatUI {
 
     clearChat() {
         this.chatContainer.innerHTML = '';
-        this.stateIndicator.innerHTML = '';
         this.currentStateMeta = null;
-        this.syncStateIndicatorVisibility();
     }
 }
