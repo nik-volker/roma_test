@@ -406,6 +406,24 @@ input {
     gap: 10px;
 }
 
+.credits-line {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: #938bb8;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.credits-line a {
+    color: #c8bcff;
+    text-decoration: none;
+}
+
+.credits-line a:hover {
+    text-decoration: underline;
+}
+
 #message-input {
     flex: 1;
     min-width: 0;
