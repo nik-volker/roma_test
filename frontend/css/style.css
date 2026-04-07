@@ -36,7 +36,7 @@ body {
 
 body {
     min-height: 100vh;
-    min-height: 100svh;
+    min-height: 100dvh;
     font-family: 'Manrope', 'Segoe UI', sans-serif;
     color: var(--text-main);
     background:
@@ -68,9 +68,9 @@ input {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     height: 100vh;
-    height: 100svh;
+    height: 100dvh;
     min-height: 100vh;
-    min-height: 100svh;
+    min-height: 100dvh;
     width: 100%;
     max-width: 1160px;
     margin: 0 auto;
@@ -238,14 +238,16 @@ input {
 }
 
 .chat-layout {
+    display: flex;
     min-height: 0;
     overflow: hidden;
 }
 
 .chat-wrapper {
     display: flex;
+    flex: 1 1 auto;
     min-height: 0;
-    height: 100%;
+    height: auto;
     border-radius: var(--radius-xl);
     padding: 18px 16px 14px;
     overflow: hidden;
