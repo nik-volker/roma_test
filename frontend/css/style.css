@@ -30,6 +30,7 @@
 
 html,
 body {
+    height: 100%;
     min-height: 100%;
 }
 
@@ -43,8 +44,7 @@ body {
         radial-gradient(circle at 86% 12%, rgba(39, 168, 241, 0.22), transparent 25%),
         radial-gradient(circle at 50% 100%, rgba(146, 80, 255, 0.12), transparent 40%),
         linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 body::before {
@@ -67,6 +67,8 @@ input {
     position: relative;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
+    height: 100vh;
+    height: 100svh;
     min-height: 100vh;
     min-height: 100svh;
     width: 100%;
@@ -76,6 +78,7 @@ input {
     gap: 14px;
     isolation: isolate;
     animation: app-fade 0.5s ease;
+    overflow: hidden;
 }
 
 @keyframes app-fade {
@@ -260,6 +263,7 @@ input {
 
 .chat-layout {
     min-height: 0;
+    overflow: hidden;
 }
 
 .chat-wrapper {
@@ -371,7 +375,9 @@ input {
 }
 
 .input-area {
-    position: relative;
+    position: sticky;
+    bottom: 0;
+    z-index: 12;
     border-radius: var(--radius-xl);
     padding: 12px;
     background: linear-gradient(180deg, rgba(20, 16, 43, 0.88) 0%, rgba(16, 13, 36, 0.9) 100%);
@@ -480,10 +486,6 @@ input {
 }
 
 @media (max-width: 980px) {
-    body {
-        overflow: auto;
-    }
-
     .app-shell {
         padding: 14px;
     }
@@ -559,6 +561,7 @@ input {
 
     .input-area {
         padding: 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
     }
 
     .input-panel {
