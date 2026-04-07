@@ -199,6 +199,11 @@ input {
     cursor: pointer;
 }
 
+#lang-select option {
+    color: #181331;
+    background: #ece6ff;
+}
+
 .toolbar #clear-button {
     min-width: 86px;
     height: 36px;
