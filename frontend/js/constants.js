@@ -13,8 +13,8 @@ export const UI_TEXT = {
     en: {
         pageTitle: 'AI Relationship Consultant | Thoughtful relationship support',
         brandEyebrow: 'AI relationship consultant',
-        brandTitle: 'Relationship clarity, one message at a time',
-        brandSubtitle: 'Reflect on difficult moments, get grounded questions, and receive practical techniques for your next step.',
+        brandTitle: 'Find a simple technique for your situation',
+        brandSubtitle: 'The assistant helps you understand what is happening in your relationship and suggests not generic advice, but the next step for your case.',
         privacyBadge: 'Private in your browser',
         currentStateLabel: 'Current state',
         messageLabel: 'Your message',
@@ -33,8 +33,8 @@ export const UI_TEXT = {
     ru: {
         pageTitle: 'AI-консультант по отношениям | Поддержка в вопросах отношений',
         brandEyebrow: 'AI-консультант по отношениям',
-        brandTitle: 'Больше ясности в отношениях, по одному сообщению за раз',
-        brandSubtitle: 'Разберите сложную ситуацию, получите бережные уточняющие вопросы и практичные техники для следующего шага.',
+        brandTitle: 'Подберет простую технику под вашу ситуацию',
+        brandSubtitle: 'Ассистент помогает понять, что происходит в отношениях. Предлагает не общие советы, а следующий шаг под твой случай',
         privacyBadge: 'Данные хранятся в браузере',
         currentStateLabel: 'Текущее состояние',
         messageLabel: 'Ваше сообщение',

@@ -28,6 +28,7 @@ class App {
         }
 
         this.loadChatHistory();
+        this.syncHeroVisibility();
 
         this.chat.sendButton.addEventListener('click', () => this.sendMessage());
         this.chat.messageInput.addEventListener('keypress', (e) => {
@@ -49,6 +50,7 @@ class App {
                 if (window.confirm(this.t('clearChatConfirm'))) {
                     this.chat.clearChat();
                     localStorage.removeItem(STORAGE_KEYS.chatHistory);
+                    this.syncHeroVisibility();
                 }
             });
         }
@@ -111,6 +113,7 @@ class App {
         }
 
         this.chat.addMessage(message, 'user');
+        this.syncHeroVisibility();
         this.chat.clearInput();
         this.chat.disableSending(true);
 
@@ -159,6 +162,16 @@ class App {
                 console.error('Failed to load chat history:', e);
             }
         }
+    }
+
+    syncHeroVisibility() {
+        const appShell = document.querySelector('.app-shell');
+        if (!appShell) {
+            return;
+        }
+
+        const hasMessages = document.querySelectorAll('#chat-container .message').length > 0;
+        appShell.classList.toggle('has-chat-history', hasMessages);
     }
 }
 
