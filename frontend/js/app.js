@@ -117,7 +117,7 @@ class App {
         try {
             const history = this.chat.getChatHistory();
 
-            const response = await this.api.sendMessage(message, history, this.language);
+            const response = await this.api.sendMessage(message, history);
 
             this.chat.addAIResponse(response);
 

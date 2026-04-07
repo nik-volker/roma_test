@@ -1,3 +1,6 @@
+import re
+
+
 SUPPORTED_LANGUAGES = {"en", "ru"}
 
 
@@ -5,6 +8,61 @@ def normalize_language(language):
     if isinstance(language, str) and language.lower() in SUPPORTED_LANGUAGES:
         return language.lower()
     return "en"
+
+
+def detect_explicit_response_language(message):
+    """Detect explicit requests like 'reply in Russian/English' inside user text."""
+    if not isinstance(message, str):
+        return None
+
+    text = message.lower()
+
+    russian_request_patterns = [
+        r"(reply|respond|answer|write)\s+(in\s+)?russian",
+        r"(отвечай|ответь|пиши|напиши)\s+на\s+русском",
+        r"на\s+русском\s+(языке)?",
+    ]
+    english_request_patterns = [
+        r"(reply|respond|answer|write)\s+(in\s+)?english",
+        r"(отвечай|ответь|пиши|напиши)\s+на\s+английском",
+        r"на\s+английском\s+(языке)?",
+    ]
+
+    for pattern in russian_request_patterns:
+        if re.search(pattern, text):
+            return "ru"
+
+    for pattern in english_request_patterns:
+        if re.search(pattern, text):
+            return "en"
+
+    return None
+
+
+def detect_user_language(message, fallback="en"):
+    """Heuristic language detection: Cyrillic -> RU, Latin -> EN."""
+    if not isinstance(message, str) or not message.strip():
+        return normalize_language(fallback)
+
+    text = message.strip()
+    cyrillic_count = len(re.findall(r"[А-Яа-яЁё]", text))
+    latin_count = len(re.findall(r"[A-Za-z]", text))
+
+    if cyrillic_count > latin_count:
+        return "ru"
+    if latin_count > cyrillic_count:
+        return "en"
+
+    return normalize_language(fallback)
+
+
+def infer_response_language(message, fallback="en"):
+    """Prefer explicit language request, otherwise infer from message content."""
+    explicit = detect_explicit_response_language(message)
+    if explicit:
+        return explicit
+
+    return detect_user_language(message, fallback=fallback)
 
 
 SYSTEM_PROMPTS = {
@@ -54,7 +112,8 @@ TECHNIQUE EXAMPLES:
 - incompatibility_questions: "Values alignment check"
 - low_self_worth_in_context: "Grounded self-affirmations"
 
-Use English. Keep the tone warm, steady, and practical. You are an AI relationship consultant, not a psychologist.""",
+Always respond in the same language as the user's latest message. If the user explicitly asks for another response language, follow that request.
+Keep the tone warm, steady, and practical. You are an AI relationship consultant, not a psychologist.""",
     "ru": """Ты — AI-консультант по отношениям, который помогает разобраться в сложностях между людьми.
 
 ТВОЯ РОЛЬ:
@@ -101,7 +160,8 @@ Use English. Keep the tone warm, steady, and practical. You are an AI relationsh
 - incompatibility_questions: "Проверка ценностей"
 - low_self_worth_in_context: "Опоры и поддерживающие формулировки"
 
-Отвечай на русском. Тон должен быть тёплым, спокойным и практичным. Ты именно AI-консультант по отношениям, а не психолог.""",
+Всегда отвечай на языке последнего сообщения пользователя. Если пользователь явно просит другой язык ответа, следуй этой просьбе.
+Тон должен быть тёплым, спокойным и практичным. Ты именно AI-консультант по отношениям, а не психолог.""",
 }
 
 

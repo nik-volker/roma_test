@@ -4,7 +4,7 @@ import logging
 from flask import Blueprint, request, jsonify
 from ai_service import call_openai
 from safety_check import check_crisis, get_crisis_response
-from prompts import normalize_language
+from prompts import infer_response_language
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def chat():
     {
         "message": "текст сообщения",
         "history": [{"role": "user", "content": "..."}, ...],  # опционально
-        "language": "en" | "ru"  # опционально
+        "language": "en" | "ru"  # опционально, сохраняется для обратной совместимости
     }
 
     Возвращает:
@@ -46,7 +46,9 @@ def chat():
 
         user_message = data.get("message", "").strip()
         conversation_history = data.get("history", [])
-        language = normalize_language(data.get("language"))
+        # Язык интерфейса не должен управлять ответом модели.
+        # Язык ответа определяется текстом пользователя и его явными просьбами.
+        language = infer_response_language(user_message)
 
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
