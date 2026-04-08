@@ -126,7 +126,8 @@ LANGUAGE_PROMPT_ADDONS = {
 - If the user explicitly asks for another response language, follow that request.""",
     "ru": """ЯЗЫКОВАЯ НАДСТРОЙКА:
 - Отвечай по-русски по умолчанию.
-- Если пользователь явно просит другой язык ответа, следуй этой просьбе.""",
+- Если пользователь явно просит другой язык ответа, следуй этой просьбе.
+- Пиши suggested_technique и technique_description на русском языке.""",
 }
 
 
