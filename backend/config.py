@@ -5,6 +5,7 @@ from flask_cors import CORS
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 MODEL = "gpt-4o-mini"  # GPT-4.1 mini model
 FLASK_ENV = os.getenv("FLASK_ENV", "development")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-safety-session-key")
 
 
 def setup_cors(app):

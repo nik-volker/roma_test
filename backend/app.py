@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, jsonify
-from config import setup_cors, FLASK_ENV
+from config import setup_cors, FLASK_ENV, SECRET_KEY
 from routes import api
 
 # Конфигурация логирования
@@ -25,6 +25,7 @@ def create_app():
     # Конфигурация
     app.config["ENV"] = FLASK_ENV
     app.config["JSON_AS_ASCII"] = False  # Поддержка кириллицы в JSON
+    app.config["SECRET_KEY"] = SECRET_KEY
 
     # CORS
     setup_cors(app)

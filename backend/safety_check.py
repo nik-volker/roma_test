@@ -184,3 +184,45 @@ def get_abuse_violence_response(language="en"):
         "safety_mode": True,
         "needs_specialist_support": True,
     }
+
+
+def get_safety_mode_followup_response(language="en"):
+    """Возвращает ответ, когда safety-mode уже активен для текущей сессии."""
+    from prompts import normalize_language
+
+    current_language = normalize_language(language)
+
+    if current_language == "ru":
+        return {
+            "message": (
+                "Сейчас важно не рассматривать это как обычный конфликт. "
+                "Похоже, вопрос связан с безопасностью. "
+                "Давай сфокусируемся на твоей защите и поддержке: обратись к человеку, которому доверяешь, "
+                "к психологу или в кризисную службу. Если есть риск немедленной опасности, звони в экстренные службы."
+            ),
+            "detected_state": "safety_risk",
+            "suggested_technique": "Поддержка и безопасность",
+            "technique_description": (
+                "Сделай один безопасный шаг прямо сейчас: свяжись с trusted person, специалистом или службой поддержки."
+            ),
+            "risk_level": "high",
+            "safety_mode": True,
+            "needs_specialist_support": True,
+        }
+
+    return {
+        "message": (
+            "This should not be treated as a normal relationship conflict. "
+            "It still looks like a safety-focused situation. "
+            "Let us keep the focus on your protection and support: contact a trusted person, a mental health professional, "
+            "or a crisis support service. If there is immediate danger, call emergency services now."
+        ),
+        "detected_state": "safety_risk",
+        "suggested_technique": "Safety and support step",
+        "technique_description": (
+            "Take one concrete safety step now: contact a trusted person, a professional, or a support service."
+        ),
+        "risk_level": "high",
+        "safety_mode": True,
+        "needs_specialist_support": True,
+    }

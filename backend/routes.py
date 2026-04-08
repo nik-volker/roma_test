@@ -1,13 +1,14 @@
 """API маршруты"""
 
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from ai_service import call_openai
 from safety_check import (
     check_crisis,
     check_abuse_violence,
     get_crisis_response,
     get_abuse_violence_response,
+    get_safety_mode_followup_response,
 )
 from prompts import infer_response_language
 
@@ -58,18 +59,31 @@ def chat():
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
 
+        # Если history пустая или почти пустая, считаем это новой сессией диалога.
+        if len(conversation_history) <= 1:
+            session.pop("safety_mode", None)
+
         # 1. Проверяем суицидальный/кризисный риск
         risk_level, crisis_keyword = check_crisis(user_message)
 
         if risk_level == "high":
             logger.warning(f"Crisis detected: {crisis_keyword}")
+            session["safety_mode"] = True
             return jsonify(get_crisis_response(language=language)), 200
 
         # 2. Проверяем признаки насилия/угроз/абьюза до обычного flow
         abuse_risk, abuse_reason = check_abuse_violence(user_message)
         if abuse_risk == "high":
             logger.warning(f"Abuse/violence safety case detected: {abuse_reason}")
+            session["safety_mode"] = True
             return jsonify(get_abuse_violence_response(language=language)), 200
+
+        # 3. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
+        if session.get("safety_mode"):
+            logger.info(
+                "Session safety_mode is active, returning safety follow-up response"
+            )
+            return jsonify(get_safety_mode_followup_response(language=language)), 200
 
         ai_response = call_openai(user_message, conversation_history, language=language)
 
