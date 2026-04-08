@@ -22,7 +22,10 @@ export class APIClient {
             const url = this.buildUrl(baseUrl, endpoint);
 
             try {
-                const response = await fetch(url, options);
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    ...options,
+                });
 
                 if (response.ok) {
                     this.activeBaseUrl = baseUrl;

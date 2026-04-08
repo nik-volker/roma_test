@@ -33,6 +33,7 @@ def setup_cors(app):
                 "origins": allowed_origins,
                 "methods": ["GET", "POST"],
                 "allow_headers": ["Content-Type"],
+                "supports_credentials": True,
             }
         },
     )
