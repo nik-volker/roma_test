@@ -1,10 +1,19 @@
-"""Детекция кризиса (суицид, самоповреждение)"""
+"""Детекция кризиса и опасных safety-ситуаций."""
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
 CRISIS_KEYWORDS = [
+    "i want to die",
+    "i don't want to live",
+    "i do not want to live",
+    "kill myself",
+    "end my life",
+    "suicide",
+    "self harm",
+    "self-harm",
     "убить себя",
     "покончить с собой",
     "свести счёты с жизнью",
@@ -12,14 +21,64 @@ CRISIS_KEYWORDS = [
     "давай мне яд",
     "пила таблетки",
     "режу себя",
-    "self-harm",
-    "self harm",
     "покончу с собой",
     "я не хочу жить",
     "нет смысла жить",
     "хочу умереть",
     "совсем надоело",
     "конец всему",
+]
+
+
+ABUSE_VIOLENCE_PATTERNS = [
+    # EN: physical violence and threats
+    (
+        r"\b(husband|partner|boyfriend|girlfriend|he|she)\s+(hits|hit|beats|beat|punched|pushed)\s+me\b",
+        "physical_violence",
+    ),
+    (
+        r"\b(he|she)\s+(hit|beats|beat|punched|pushed|strangled|choked)\s+me\b",
+        "physical_violence",
+    ),
+    (
+        r"\b(i am|i'm|im)\s+afraid\s+of\s+(my\s+)?(partner|husband|wife|boyfriend|girlfriend|him|her)\b",
+        "fear_for_safety",
+    ),
+    (r"\b(he|she)\s+(threatens|threatened|is threatening)\s+me\b", "threats"),
+    (r"\b(not\s+safe|don't\s+feel\s+safe|do\s+not\s+feel\s+safe)\b", "fear_for_safety"),
+    (
+        r"\b(he|she)\s+(controls|is controlling)\s+(my\s+)?(phone|money|finances|movements|where\s+i\s+go)\b",
+        "coercive_control",
+    ),
+    (
+        r"\b(he|she)\s+(won't|will\s+not|doesn't|does\s+not)\s+let\s+me\s+leave\b",
+        "restraining_or_isolation",
+    ),
+    (r"\b(he|she)\s+(forces|forced|is forcing)\s+me\b", "coercion"),
+    # RU: физическое насилие, контроль, угрозы
+    (
+        r"\b(муж|партнер|парень|девушка|он|она)\s+меня\s+(бьет|бьёт|ударил|ударила|толкнул|толкнула|душил|душила)\b",
+        "physical_violence",
+    ),
+    (
+        r"\b(он|она)\s+меня\s+(бьет|бьёт|ударил|ударила|толкнул|толкнула|душил|душила)\b",
+        "physical_violence",
+    ),
+    (
+        r"\bя\s+боюсь\s+(мужа|партнера|партнёра|партнершу|партнёршу|его|ее|её|ее)\b",
+        "fear_for_safety",
+    ),
+    (r"\b(он|она)\s+мне\s+угрожает\b", "threats"),
+    (
+        r"\b(не\s+чувствую\s+себя\s+в\s+безопасности|мне\s+не\s+безопасно)\b",
+        "fear_for_safety",
+    ),
+    (
+        r"\b(он|она)\s+контролирует\s+(меня|мой\s+телефон|деньги|мои\s+деньги|мои\s+передвижения|куда\s+я\s+хожу)\b",
+        "coercive_control",
+    ),
+    (r"\b(он|она)\s+не\s+дает\s+уйти\b", "restraining_or_isolation"),
+    (r"\b(он|она)\s+меня\s+заставляет\b", "coercion"),
 ]
 
 
@@ -37,6 +96,25 @@ def check_crisis(message):
         if keyword in message_lower:
             logger.warning(f"CRISIS DETECTED: {keyword}")
             return "high", keyword
+
+    return "none", None
+
+
+def check_abuse_violence(message):
+    """
+    Проверяет, есть ли признаки насилия, угроз, coercive control,
+    страха за безопасность и других red flags.
+    Возвращает ('high', reason) или ('none', None)
+    """
+    if not message:
+        return "none", None
+
+    message_lower = message.lower()
+
+    for pattern, reason in ABUSE_VIOLENCE_PATTERNS:
+        if re.search(pattern, message_lower):
+            logger.warning(f"ABUSE/VIOLENCE SAFETY CASE DETECTED: {reason}")
+            return "high", reason
 
     return "none", None
 
@@ -62,4 +140,47 @@ def get_crisis_response(language="en"):
         "suggested_technique": suggested_technique,
         "technique_description": technique_description,
         "risk_level": "high",
+        "safety_mode": True,
+        "needs_specialist_support": True,
+    }
+
+
+def get_abuse_violence_response(language="en"):
+    """Возвращает safety-ответ при признаках насилия/угроз/абьюза."""
+    from prompts import normalize_language
+
+    current_language = normalize_language(language)
+
+    if current_language == "ru":
+        return {
+            "message": (
+                "Спасибо, что поделился этим. То, что ты описываешь, похоже на серьезный red flag и может быть опасной ситуацией, "
+                "а не обычной ссорой. Твоя безопасность сейчас важнее всего. "
+                "Пожалуйста, обратись за поддержкой к человеку, которому доверяешь, психологу или кризисной службе. "
+                "Если есть риск немедленной опасности, сразу звони в экстренные службы."
+            ),
+            "detected_state": "safety_risk",
+            "suggested_technique": "План безопасности",
+            "technique_description": (
+                "Определи безопасное место, подготовь контакты экстренной помощи и человека, которому можно написать или позвонить прямо сейчас."
+            ),
+            "risk_level": "high",
+            "safety_mode": True,
+            "needs_specialist_support": True,
+        }
+
+    return {
+        "message": (
+            "Thank you for sharing this. What you describe is a serious safety red flag and may be dangerous, not a normal relationship conflict. "
+            "Your safety comes first. Please reach out to a trusted person, a mental health professional, or a crisis support service. "
+            "If there is immediate danger, contact emergency services right now."
+        ),
+        "detected_state": "safety_risk",
+        "suggested_technique": "Safety first plan",
+        "technique_description": (
+            "Identify a safe place, prepare emergency contacts, and contact a trusted person or crisis service now."
+        ),
+        "risk_level": "high",
+        "safety_mode": True,
+        "needs_specialist_support": True,
     }

@@ -62,6 +62,51 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 
+# Test 5: Violence detection
+print("\n" + "=" * 60)
+print("TEST 5: /api/chat - Violence case")
+print("=" * 60)
+try:
+    payload = {"message": "My husband hits me", "language": "en"}
+    resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
+    print(f"Status: {resp.status_code}")
+    result = resp.json()
+    print("Response:")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+except Exception as e:
+    print(f"Error: {e}")
+
+# Test 6: Fear of partner detection
+print("\n" + "=" * 60)
+print("TEST 6: /api/chat - Fear of partner")
+print("=" * 60)
+try:
+    payload = {"message": "I am afraid of my partner", "language": "en"}
+    resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
+    print(f"Status: {resp.status_code}")
+    result = resp.json()
+    print("Response:")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+except Exception as e:
+    print(f"Error: {e}")
+
+# Test 7: Coercive control/threats detection
+print("\n" + "=" * 60)
+print("TEST 7: /api/chat - Coercive control / threats")
+print("=" * 60)
+try:
+    payload = {
+        "message": "He controls my phone and money and threatens me",
+        "language": "en",
+    }
+    resp = requests.post(f"{BASE_URL}/api/chat", json=payload)
+    print(f"Status: {resp.status_code}")
+    result = resp.json()
+    print("Response:")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+except Exception as e:
+    print(f"Error: {e}")
+
 print("\n" + "=" * 60)
 print("Tests completed!")
 print("=" * 60)

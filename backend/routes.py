@@ -3,7 +3,12 @@
 import logging
 from flask import Blueprint, request, jsonify
 from ai_service import call_openai
-from safety_check import check_crisis, get_crisis_response
+from safety_check import (
+    check_crisis,
+    check_abuse_violence,
+    get_crisis_response,
+    get_abuse_violence_response,
+)
 from prompts import infer_response_language
 
 logger = logging.getLogger(__name__)
@@ -53,12 +58,18 @@ def chat():
         if not user_message:
             return jsonify({"error": "Empty message"}), 400
 
-        # 1. Проверяем кризис
+        # 1. Проверяем суицидальный/кризисный риск
         risk_level, crisis_keyword = check_crisis(user_message)
 
         if risk_level == "high":
             logger.warning(f"Crisis detected: {crisis_keyword}")
             return jsonify(get_crisis_response(language=language)), 200
+
+        # 2. Проверяем признаки насилия/угроз/абьюза до обычного flow
+        abuse_risk, abuse_reason = check_abuse_violence(user_message)
+        if abuse_risk == "high":
+            logger.warning(f"Abuse/violence safety case detected: {abuse_reason}")
+            return jsonify(get_abuse_violence_response(language=language)), 200
 
         ai_response = call_openai(user_message, conversation_history, language=language)
 
