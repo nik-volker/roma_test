@@ -186,6 +186,29 @@ def get_abuse_violence_response(language="en"):
     }
 
 
+def check_history_for_safety_flags(conversation_history):
+    """
+    Сканирует conversation_history на наличие прошлых red flags.
+    Возвращает True, если хотя бы одно user-сообщение содержало
+    crisis или abuse/violence триггер.
+    """
+    if not conversation_history:
+        return False
+
+    for entry in conversation_history:
+        if entry.get("role") != "user":
+            continue
+        content = entry.get("content", "")
+        crisis_level, _ = check_crisis(content)
+        if crisis_level == "high":
+            return True
+        abuse_level, _ = check_abuse_violence(content)
+        if abuse_level == "high":
+            return True
+
+    return False
+
+
 def get_safety_mode_followup_response(language="en"):
     """Возвращает ответ, когда safety-mode уже активен для текущей сессии."""
     from prompts import normalize_language

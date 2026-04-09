@@ -6,6 +6,7 @@ from ai_service import call_openai
 from safety_check import (
     check_crisis,
     check_abuse_violence,
+    check_history_for_safety_flags,
     get_crisis_response,
     get_abuse_violence_response,
     get_safety_mode_followup_response,
@@ -79,7 +80,11 @@ def chat():
             return jsonify(get_abuse_violence_response(language=language)), 200
 
         # 3. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
-        if session.get("safety_mode"):
+        #    Проверяем session cookie И историю (на случай потери cookie).
+        if session.get("safety_mode") or check_history_for_safety_flags(
+            conversation_history
+        ):
+            session["safety_mode"] = True
             logger.info(
                 "Session safety_mode is active, returning safety follow-up response"
             )
