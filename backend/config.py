@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 # OpenAI и Flask конфиг
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-MODEL = "gpt-4.1"  # GPT-4.1 model
+MODEL = "gpt-5.1"  # GPT-5.1 model
 FLASK_ENV = os.getenv("FLASK_ENV", "development")
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-safety-session-key")
 
