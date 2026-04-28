@@ -250,6 +250,92 @@ class SafetyChecksTestCase(unittest.TestCase):
         )
         self.assertEqual(risk, "none")
 
+    # ------------------------------------------------------------------
+    # Realistic long-form scenarios that previously slipped through
+    # ------------------------------------------------------------------
+
+    def test_real_world_long_ru_case_triggers_dangerous_partner(self):
+        msg = (
+            "Я переписываюсь с мужчиной. Он сидит сейчас в тюрьме за убийство и "
+            "изнасилование, скоро выходит на свободу. Преступления, которые он "
+            "совершил, очень тяжёлые, но мне не страшно, я уверена в нём. "
+            "Он уже знает мой адрес. У меня дома двое детей."
+        )
+        risk, reason = check_dangerous_partner_or_criminal_risk(msg)
+        self.assertEqual(risk, "high")
+        self.assertIn("imprisonment", reason)
+        self.assertIn("serious_crime", reason)
+        self.assertIn("address_knowledge", reason)
+        self.assertIn("minimization", reason)
+        self.assertIn("children_present", reason)
+
+    def test_short_he_sits_for_murder_with_minimization_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он сидит за убийство, я ему верю"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("minimization", reason)
+
+    def test_short_he_raped_people_with_romantic_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он изнасиловал людей, я хочу быть с ним"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("serious_crime", reason)
+        self.assertIn("romantic_involvement", reason)
+
+    def test_address_knowledge_with_imprisonment_triggers_alone_ru(self):
+        """Address knowledge is a strong amplifier — triggers without other phase-2 signals."""
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он скоро выходит на свободу и знает мой адрес"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("address_knowledge", reason)
+
+    def test_short_release_and_children_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он выходит из тюрьмы, у меня дома двое детей"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("children_present", reason)
+
+    def test_committed_murder_with_minimization_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он совершил убийство, но он хороший человек"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("minimization", reason)
+
+    def test_serving_life_sentence_with_pen_pal_en(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "He is serving a life sentence for murder, we are pen pals and I love him"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("imprisonment", reason)
+        self.assertIn("romantic_involvement", reason)
+
+    # ------------------------------------------------------------------
+    # Media false positives — must NOT trigger
+    # ------------------------------------------------------------------
+
+    def test_false_positive_book_about_killer_ru(self):
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "Я читала книгу про убийцу, который сидит за убийство"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_series_about_prison_ru(self):
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "В сериале герой сидит в тюрьме за изнасилование"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_news_about_release_en(self):
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "I read in the news that a convicted murderer is being released"
+        )
+        self.assertEqual(risk, "none")
+
 
 if __name__ == "__main__":
     unittest.main()

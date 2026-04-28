@@ -455,6 +455,27 @@ class SafetySessionModeRouteTestCase(unittest.TestCase):
             payload.get("safety_category"), "dangerous_partner_or_criminal_risk"
         )
 
+    def test_real_long_ru_dangerous_partner_route(self):
+        """Free-form long Russian message that previously slipped through."""
+        msg = (
+            "Я переписываюсь с мужчиной. Он сидит сейчас в тюрьме за убийство и "
+            "изнасилование, скоро выходит на свободу. Преступления, которые он "
+            "совершил, очень тяжёлые, но мне не страшно, я уверена в нём. "
+            "Он уже знает мой адрес. У меня дома двое детей."
+        )
+        response = self.client.post(
+            "/api/chat",
+            json={"message": msg, "history": [{"role": "user", "content": msg}]},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload.get("risk_level"), "high")
+        self.assertTrue(payload.get("safety_mode"))
+        self.assertFalse(payload.get("show_technique"))
+        self.assertEqual(
+            payload.get("safety_category"), "dangerous_partner_or_criminal_risk"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
