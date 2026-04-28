@@ -20,8 +20,8 @@ def _extract_json_payload(raw_text):
     text = raw_text.strip()
 
     # Частый кейс: модель оборачивает JSON в markdown-кодблок.
-    text = re.sub(r"^```(?:json)?\\s*", "", text)
-    text = re.sub(r"\\s*```$", "", text)
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
 
     try:
         return json.loads(text)
@@ -122,7 +122,7 @@ def call_openai(user_message, conversation_history=None, language="en"):
                 *messages,
             ],
             temperature=0.8,
-            max_tokens=500,
+            max_tokens=1200,
             response_format={"type": "json_object"},
         )
 
@@ -136,10 +136,7 @@ def call_openai(user_message, conversation_history=None, language="en"):
             logger.error(
                 f"Failed to parse OpenAI response as JSON: {assistant_response}"
             )
-            response_json = _default_response(
-                current_language,
-                message=assistant_response,
-            )
+            response_json = _default_response(current_language)
 
         defaults = _default_response(current_language)
         for key, value in defaults.items():
