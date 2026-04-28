@@ -188,70 +188,22 @@ FRAUD_FINANCIAL_PATTERNS = [
 # (ROMANTIC_INVOLVEMENT | MINIMIZATION | CHILDREN_PRESENT).
 # This avoids false positives like discussing a movie or unrelated minor offences.
 
-# Imprisonment / sentencing / release context — flexible (no required adjacency).
-IMPRISONMENT_PATTERNS = [
-    # EN
-    r"\b(in|behind)\s+(prison|jail|bars)\b",
-    r"\bincarcerat(ed|ion)\b",
-    r"\b(serving|served|doing)\s+(a\s+)?(sentence|time|life\s+sentence)\b",
-    r"\b(convicted|sentenced)\s+(of|for)\b",
-    r"\b(get(s|ting)?|being|to\s+be)\s+(released|let\s+out|out\s+of\s+(prison|jail))\b",
-    r"\bprison\s+pen[-\s]?pal\b",
-    r"\b(life|prison)\s+sentence\b",
-    # RU: глаголы заключения / отбывания / освобождения — без жёсткой структуры
-    r"\bсид(ит|ел|ела|им|ят)\b",
-    r"\bотбыва(ет|ет\s+срок|л|ла|ют|ли)\b",
-    r"\bв\s+(тюрьм\w+|колони\w+|сизо|зон\w+|местах\s+лишения\s+свобод\w+)\b",
-    r"\bосужд(ён|ен|ена|ены|ённый|енный|енная)\b",
-    r"\b(скоро\s+)?(выход(ит|ил|ила)|выйд(ет|у|ут)|освобожда(ется|лся|лась|ются)|освобод(ится|ился|илась|ятся))\s+(из\s+(тюрьм\w+|колони\w+|сизо|зон\w+)|на\s+свобод\w+)\b",
-    r"\bна\s+свобод\w+\b",
-    r"\bпожизненн\w+\s+(срок|заключени\w+)\b",
-]
-
-# Serious violent crime mentions — independent signal.
-SERIOUS_CRIME_PATTERNS = [
-    # EN
-    r"\b(murder(ed|er|ers)?|killing|killed|homicide|killer)\b",
-    r"\brape(d|r|s|rs)?\b",
-    r"\bsexual\s+(assault|violence|abuse|offen[cs]e)\b",
-    r"\b(violent\s+(crime|offender|offense|offence|crimes)|domestic\s+violence|manslaughter)\b",
-    # RU
-    r"\bубийств\w+\b",
-    r"\bубил(а|и|и\s+\w+)?\b",
-    r"\bубит\w+\b",
-    r"\bубийц\w+\b",
-    r"\bизнасилов(ал|ала|али|ан|ана|аны|ание|ания)\b",
-    r"\bизнасилован\w+\b",
-    r"\bнасильник\w+\b",
-    r"\b(совершил|совершила|совершили)\s+\w*\s*(убийств\w+|изнасилован\w+|насил\w+|преступлен\w+)\b",
-    r"\bтяжк\w+\s+(преступлен\w+|насил\w+)\b",
-    r"\bнасильственн\w+\s+преступлен\w+\b",
-]
-
-# Strong amplifier: the criminal already knows where the user lives.
-ADDRESS_KNOWLEDGE_PATTERNS = [
-    # EN
-    r"\b(he|she|they)\s+(already\s+)?knows?\s+(my\s+)?(address|where\s+i\s+live|where\s+my\s+(home|house)\s+is|my\s+home\s+address)\b",
-    r"\b(he|she|they)\s+(has|have)\s+my\s+(address|home\s+address)\b",
-    r"\bknows?\s+(my\s+address|where\s+i\s+live|where\s+my\s+(home|house)\s+is)\b",
-    # RU
-    r"\b(он|она|они)\s+(уже\s+)?знает\s+(мой\s+адрес|где\s+я\s+живу|где\s+я|где\s+мой\s+дом|где\s+(находится\s+)?мой\s+(дом|адрес))\b",
-    r"\b(он|она|они)\s+знают?\s+(мой\s+адрес|где\s+я\s+живу)\b",
-    # Free-form: "и знает мой адрес", "уже знает мой адрес" — no person-prefix required
-    r"\bзнает\s+(мой\s+адрес|где\s+я\s+живу|где\s+мой\s+дом)\b",
-    r"\bзнают\s+(мой\s+адрес|где\s+я\s+живу)\b",
-    r"\bу\s+(него|неё|нее|них)\s+(есть\s+)?мой\s+адрес\b",
-    r"\bему\s+известен\s+мой\s+(адрес|дом)\b",
-]
-
-# Discourse markers that downgrade signals — the user is talking about media, not their own life.
-MEDIA_CONTEXT_PATTERNS = [
-    # EN
-    r"\b(in|on)\s+(a|the|that)?\s*(movie|film|book|series|tv\s+show|show|news|documentary|article|story|novel)\b",
-    r"\b(watching|watched|read|reading)\s+(a|the|that)?\s*(movie|film|book|series|news|documentary|article|story|novel)\b",
-    # RU
-    r"\b(в|на)\s+(фильме|кино|книге|сериале|передаче|новостях|документалке|статье|романе|рассказе)\b",
-    r"\b(смотр(ю|ел|ела|ела\s+\w+)|читал(а)?|чита(ю|ла))\s+(фильм|кино|книгу|сериал|передачу|новости|документалку|статью|роман|рассказ)\w*\b",
+CRIMINAL_CONTEXT_PATTERNS = [
+    # EN: imprisonment / serving time / release
+    r"\b(he|she|they)\s+(is|was|has\s+been)\s+(in|behind)\s+(prison|jail|bars)\b",
+    r"\b(in|behind)\s+(prison|jail|bars)\s+for\s+(murder|killing|homicide|rape|sexual\s+assault|sexual\s+violence|violence|violent\s+crime|assault|manslaughter|domestic\s+violence)\b",
+    r"\b(serving|served|doing)\s+(a\s+)?(sentence|time)\s+for\s+(murder|killing|homicide|rape|sexual\s+assault|violence|violent\s+crime|assault|manslaughter)\b",
+    r"\b(convicted|sentenced)\s+(of|for)\s+(murder|killing|homicide|rape|sexual\s+assault|sexual\s+violence|violence|violent\s+crime|assault|manslaughter|domestic\s+violence)\b",
+    r"\b(he|she|they)\s+(is\s+)?(getting|being)\s+(released|let\s+out)\s+(from\s+)?(prison|jail)\b",
+    r"\b(he|she|they)\s+(killed|murdered|raped)\s+(someone|people|a\s+person|a\s+woman|a\s+man|a\s+girl|a\s+boy)\b",
+    # RU: тюрьма / срок / преступления
+    r"\b(он|она|они)\s+(сидит|сидел|сидела|отбывает|отбывал|отбывала)\s+(срок\s+)?(за|по\s+статье)\s+(убийство|убийства|изнасилование|изнасилования|насилие|насильственн\w+|разбой|грабёж|грабеж|тяжк\w+\s+преступлени\w+)\b",
+    r"\b(сидит|сидел|сидела|отбывает|отбывал|отбывала)\s+(в\s+тюрьме|в\s+колонии|в\s+сизо|на\s+зоне|срок)\b",
+    r"\b(он|она|они)\s+(в\s+тюрьме|в\s+колонии|в\s+сизо|на\s+зоне)\b",
+    r"\b(осуждён|осужден|осуждена|осуждены)\s+(за|по\s+статье)\s+(убийство|убийства|изнасилование|изнасилования|насилие|насильственн\w+|разбой|грабёж|грабеж|тяжк\w+\s+преступлени\w+)\b",
+    r"\b(он|она|они)\s+(скоро\s+)?(выходит|освобождается|выйдет|освободится)\s+(из\s+)?(тюрьмы|колонии|сизо|зоны)\b",
+    r"\b(выходит|освобождается|выйдет|освободится)\s+(из\s+)?(тюрьмы|колонии|сизо|зоны)\b",
+    r"\b(он|она|они)\s+(убил|убила|убили|изнасиловал|изнасиловала|изнасиловали)\s+(человека|людей|женщину|мужчину|девушку|девочку|мальчика|кого[-\s]то)\b",
 ]
 
 ROMANTIC_INVOLVEMENT_PATTERNS = [
@@ -266,20 +218,17 @@ ROMANTIC_INVOLVEMENT_PATTERNS = [
     r"\b(i\s+(write|chat|text|talk|correspond)\s+(with|to)\s+him)\b",
     r"\b(i\s+(write|chat|text|talk|correspond)\s+(with|to)\s+her)\b",
     r"\b(pen[-\s]?pal|prison\s+pen[-\s]?pal)\b",
-    r"\bour\s+(letters|correspondence|relationship)\b",
     # RU
-    r"\b(мой|моя|мои)\s+(парень|девушка|партнер|партнёр|муж|жена|жених|невеста|избранник|избранница|мужчина|любимый|любимая)\b",
+    r"\b(мой|моя|мои)\s+(парень|девушка|партнер|партнёр|муж|жена|жених|невеста|избранник|избранница)\b",
     r"\b(я\s+(встречаюсь|встречаемся|вместе)\s+с\s+ним)\b",
     r"\b(я\s+(встречаюсь|встречаемся|вместе)\s+с\s+ней)\b",
     r"\b(я\s+(люблю|обожаю)\s+(его|её|ее))\b",
     r"\b(мы\s+(вместе|встречаемся|пара|в\s+отношениях))\b",
     r"\b(я\s+хочу|хочу|мне\s+хочется|планирую)\s+(продолжать|продолжить|сохранить|строить|начать)\s+(переписку|общение|отношения|общаться|переписываться|с\s+ним|с\s+ней|быть\s+с\s+ним|быть\s+с\s+ней)\b",
     r"\b(я\s+хочу|хочу|мне\s+хочется|планирую)\s+(пригласить|позвать|привести|впустить)\s+(его|её|ее|их)\b",
-    r"\b(я\s+(переписываюсь|общаюсь|пишу|разговариваю)\s+с\s+(ним|ней))\b",
-    r"\b(переписка|переписку|переписки)\s+с\s+(ним|ней)\b",
-    r"\b(наш\w*|эт\w+)\s+(переписк\w+|общени\w+|письм\w+|отношени\w+)\b",
+    r"\b(я\s+(переписываюсь|общаюсь|пишу|разговариваю)\s+с\s+ним)\b",
+    r"\b(я\s+(переписываюсь|общаюсь|пишу|разговариваю)\s+с\s+ней)\b",
     r"\b(сближаться|сблизиться)\s+с\s+(ним|ней|ними)\b",
-    r"\b(хочу|хочется)\s+быть\s+с\s+(ним|ней)\b",
 ]
 
 MINIMIZATION_PATTERNS = [
@@ -292,40 +241,25 @@ MINIMIZATION_PATTERNS = [
     r"\b(he|she)\s+(is\s+)?(my)\s+chance\b",
     r"\b(he|she)\s+is\s+(actually\s+)?(a\s+)?(good|kind|gentle|loving)\s+(man|woman|person|guy|soul)\b",
     r"\b(everyone\s+deserves|deserves)\s+(a\s+)?second\s+chance\b",
-    r"\bi\s+feel\s+safe\s+with\s+(him|her)\b",
-    # RU: «не страшно» / «не боюсь» — допускаем разные формы
-    r"\bмне\s+не\s+страшно\b",
-    r"\bне\s+страшно\b",
-    r"\bя\s+не\s+бо(юсь|ялась|ялся)\b",
-    r"\bне\s+бо(юсь|ялась|ялся)\s+(его|её|ее|их)\b",
-    # «уверена / уверен» — расширяем форму
-    r"\bя\s+(уверена|уверен)\s+в\s+(нём|нем|ней|этом\s+(человеке|мужчине)|этой\s+женщине)\b",
-    r"\bя\s+(уверена|уверен),?\s+что\s+он\b",
-    r"\bя\s+(уверена|уверен),?\s+что\s+она\b",
-    r"\b(я\s+ему|я\s+ей)\s+верю\b",
-    r"\bя\s+верю\s+в\s+(него|неё|нее)\b",
-    # «раскаялся / изменился»
+    # RU
+    r"\b(мне\s+не\s+страшно|я\s+не\s+бо(юсь|юсь\s+его|юсь\s+её|юсь\s+ее))\b",
+    r"\b(я\s+(уверена|уверен)\s+(в\s+нём|в\s+нем|в\s+ней|что\s+он|что\s+она))\b",
     r"\b(он|она)\s+(раскаялся|раскаялась|раскаивается|изменился|изменилась|стал\s+другим|стала\s+другой)\b",
-    # «мой шанс / шанс на счастье»
-    r"\b(это\s+)?(мой|её|единственный)\s+шанс\s+(на\s+(счастье|любовь|семью)|быть\s+счастлив\w+)\b",
+    r"\b(это\s+)?(мой|единственный)\s+шанс\s+(на\s+(счастье|любовь|семью)|быть\s+счастлив\w+)\b",
     r"\b(он|она)\s+(мой|моя)\s+шанс\b",
-    r"\b(мой|единственный)\s+шанс\s+быть\s+(счастлив\w+)\b",
-    # «он хороший человек»
     r"\b(он|она)\s+(на\s+самом\s+деле\s+)?(хороший|добрый|нежный|любящий)\s+(человек|парень|мужчина|женщина|душа)\b",
     r"\b(каждый\s+заслуживает|заслуживает)\s+(второй\s+|еще\s+один\s+|ещё\s+один\s+)?шанс\b",
-    r"\bтолько\s+он\s+меня\s+(понимает|любит)\b",
 ]
 
 CHILDREN_PRESENT_PATTERNS = [
     # EN
     r"\b(my|our)\s+(child|children|kid|kids|son|daughter|daughters|sons|baby|babies)\b",
     r"\b(kids|children)\s+(at\s+home|in\s+the\s+house|around|with\s+me)\b",
-    r"\bi\s+have\s+(a\s+)?(child|children|kid|kids|son|daughter|baby|two\s+kids|three\s+kids|two\s+children|three\s+children)\b",
-    # RU: расширяем числительные ("двое детей", "трое детей") и формы
+    r"\bi\s+have\s+(a\s+)?(child|children|kid|kids|son|daughter|baby)\b",
+    # RU
     r"\b(мой|моя|мои|наш|наша|наши)\s+(ребенок|ребёнок|дети|сын|дочь|дочка|малыш|младенец|сыновья|дочери)\b",
-    r"\b(дома|со\s+мной|рядом|в\s+доме|в\s+квартире|в\s+семье)\s+(есть\s+)?(дети|ребенок|ребёнок|малыш|малыши|двое\s+детей|трое\s+детей|двое|трое|маленьк\w+\s+ребенок|маленьк\w+\s+ребёнок)\b",
-    r"\bу\s+(меня|нас)\s+(дома\s+)?(есть\s+)?(дети|ребенок|ребёнок|сын|дочь|дочка|малыш|двое\s+(детей|сыновей|дочерей|малышей)|трое\s+(детей|сыновей|дочерей|малышей)|двое|трое)\b",
-    r"\bу\s+(меня|нас)\s+маленьк\w+\s+(ребенок|ребёнок|дети)\b",
+    r"\b(дома|со\s+мной|рядом|в\s+доме)\s+(дети|ребенок|ребёнок|малыш|малыши)\b",
+    r"\b(у\s+меня|у\s+нас)\s+(дома\s+)?(дети|ребенок|ребёнок|сын|дочь|дочка|малыш)\b",
 ]
 
 
@@ -386,75 +320,52 @@ def check_fraud_financial_pressure(message):
     return "none", None
 
 
-def _any_match(patterns, text):
-    return any(re.search(p, text) for p in patterns)
-
-
 def check_dangerous_partner_or_criminal_risk(message):
     """
     Проверяет, описывает ли пользователь романтическую вовлечённость
-    в человека с серьёзным криминальным контекстом (тюрьма / отбывает срок
-    и/или насильственное преступление: убийство, изнасилование, насилие),
-    либо минимизирует риск, хочет сближаться, упоминает уязвимых детей
-    рядом, либо что криминальный человек уже знает её адрес.
+    в человека с серьёзным криминальным контекстом (тюрьма за насильственные
+    преступления, убийство, изнасилование) и/или минимизирует риск,
+    хочет сближаться, либо упоминает уязвимых детей рядом.
 
-    Структура:
-    - imprisonment / serious_crime / address_knowledge — независимые сигналы криминального контекста.
-    - При media-context (фильм/книга/новости) сигналы downgrade'ятся, если они единственные.
-    - Trigger: criminal_context AND (romantic OR minimization OR children OR address).
-      Если найдено address_knowledge при наличии любого imprisonment/crime сигнала — это
-      самостоятельный triggering сигнал безопасности.
-
+    Триггер: criminal_context AND (romantic_involvement OR minimization OR children_present).
     Возвращает ('high', reason) или ('none', None).
     """
     if not message:
         return "none", None
 
-    msg = message.lower()
+    message_lower = message.lower()
 
-    has_imprisonment = _any_match(IMPRISONMENT_PATTERNS, msg)
-    has_serious_crime = _any_match(SERIOUS_CRIME_PATTERNS, msg)
-    has_address = _any_match(ADDRESS_KNOWLEDGE_PATTERNS, msg)
-    has_media_context = _any_match(MEDIA_CONTEXT_PATTERNS, msg)
-
-    has_criminal_context = has_imprisonment or has_serious_crime or has_address
+    has_criminal_context = any(
+        re.search(pattern, message_lower) for pattern in CRIMINAL_CONTEXT_PATTERNS
+    )
     if not has_criminal_context:
         return "none", None
 
-    has_romantic = _any_match(ROMANTIC_INVOLVEMENT_PATTERNS, msg)
-    has_minimization = _any_match(MINIMIZATION_PATTERNS, msg)
-    has_children = _any_match(CHILDREN_PRESENT_PATTERNS, msg)
-
-    # Media context guard: if user is talking about a movie/book/news AND there is
-    # no clear personal-life signal (romantic / minimization / children / address),
-    # do not trigger. This protects "я смотрела фильм про человека в тюрьме" cases.
-    has_personal_signal = (
-        has_romantic or has_minimization or has_children or has_address
+    has_romantic = any(
+        re.search(pattern, message_lower) for pattern in ROMANTIC_INVOLVEMENT_PATTERNS
     )
-    if has_media_context and not has_personal_signal:
-        return "none", None
-
-    if not has_personal_signal:
-        return "none", None
-
-    signals = []
-    if has_imprisonment:
-        signals.append("imprisonment")
-    if has_serious_crime:
-        signals.append("serious_crime")
-    if has_address:
-        signals.append("address_knowledge")
-    if has_romantic:
-        signals.append("romantic_involvement")
-    if has_minimization:
-        signals.append("minimization")
-    if has_children:
-        signals.append("children_present")
-    reason = "+".join(signals)
-    logger.warning(
-        f"DANGEROUS PARTNER / CRIMINAL RISK SAFETY CASE DETECTED: {reason}"
+    has_minimization = any(
+        re.search(pattern, message_lower) for pattern in MINIMIZATION_PATTERNS
     )
-    return "high", reason
+    has_children = any(
+        re.search(pattern, message_lower) for pattern in CHILDREN_PRESENT_PATTERNS
+    )
+
+    if has_romantic or has_minimization or has_children:
+        signals = []
+        if has_romantic:
+            signals.append("romantic_involvement")
+        if has_minimization:
+            signals.append("minimization")
+        if has_children:
+            signals.append("children_present")
+        reason = "criminal_context+" + "|".join(signals)
+        logger.warning(
+            f"DANGEROUS PARTNER / CRIMINAL RISK SAFETY CASE DETECTED: {reason}"
+        )
+        return "high", reason
+
+    return "none", None
 
 
 def get_crisis_response(language="en"):
