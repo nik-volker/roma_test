@@ -183,6 +183,86 @@ FRAUD_FINANCIAL_PATTERNS = [
 ]
 
 
+# Dangerous-partner / criminal-risk detection.
+# Two-phase trigger: a CRIMINAL_CONTEXT match AND at least one of
+# (ROMANTIC_INVOLVEMENT | MINIMIZATION | CHILDREN_PRESENT).
+# This avoids false positives like discussing a movie or unrelated minor offences.
+
+CRIMINAL_CONTEXT_PATTERNS = [
+    # EN: imprisonment / serving time / release
+    r"\b(he|she|they)\s+(is|was|has\s+been)\s+(in|behind)\s+(prison|jail|bars)\b",
+    r"\b(in|behind)\s+(prison|jail|bars)\s+for\s+(murder|killing|homicide|rape|sexual\s+assault|sexual\s+violence|violence|violent\s+crime|assault|manslaughter|domestic\s+violence)\b",
+    r"\b(serving|served|doing)\s+(a\s+)?(sentence|time)\s+for\s+(murder|killing|homicide|rape|sexual\s+assault|violence|violent\s+crime|assault|manslaughter)\b",
+    r"\b(convicted|sentenced)\s+(of|for)\s+(murder|killing|homicide|rape|sexual\s+assault|sexual\s+violence|violence|violent\s+crime|assault|manslaughter|domestic\s+violence)\b",
+    r"\b(he|she|they)\s+(is\s+)?(getting|being)\s+(released|let\s+out)\s+(from\s+)?(prison|jail)\b",
+    r"\b(he|she|they)\s+(killed|murdered|raped)\s+(someone|people|a\s+person|a\s+woman|a\s+man|a\s+girl|a\s+boy)\b",
+    # RU: тюрьма / срок / преступления
+    r"\b(он|она|они)\s+(сидит|сидел|сидела|отбывает|отбывал|отбывала)\s+(срок\s+)?(за|по\s+статье)\s+(убийство|убийства|изнасилование|изнасилования|насилие|насильственн\w+|разбой|грабёж|грабеж|тяжк\w+\s+преступлени\w+)\b",
+    r"\b(сидит|сидел|сидела|отбывает|отбывал|отбывала)\s+(в\s+тюрьме|в\s+колонии|в\s+сизо|на\s+зоне|срок)\b",
+    r"\b(он|она|они)\s+(в\s+тюрьме|в\s+колонии|в\s+сизо|на\s+зоне)\b",
+    r"\b(осуждён|осужден|осуждена|осуждены)\s+(за|по\s+статье)\s+(убийство|убийства|изнасилование|изнасилования|насилие|насильственн\w+|разбой|грабёж|грабеж|тяжк\w+\s+преступлени\w+)\b",
+    r"\b(он|она|они)\s+(скоро\s+)?(выходит|освобождается|выйдет|освободится)\s+(из\s+)?(тюрьмы|колонии|сизо|зоны)\b",
+    r"\b(выходит|освобождается|выйдет|освободится)\s+(из\s+)?(тюрьмы|колонии|сизо|зоны)\b",
+    r"\b(он|она|они)\s+(убил|убила|убили|изнасиловал|изнасиловала|изнасиловали)\s+(человека|людей|женщину|мужчину|девушку|девочку|мальчика|кого[-\s]то)\b",
+]
+
+ROMANTIC_INVOLVEMENT_PATTERNS = [
+    # EN
+    r"\b(my|our)\s+(boyfriend|girlfriend|partner|husband|wife|fiance|fiancé|fiancee|fiancée|man|woman)\b",
+    r"\b(i\s+(am|'m)\s+(dating|seeing|with))\b",
+    r"\b(i\s+(love|adore))\s+him\b",
+    r"\b(i\s+(love|adore))\s+her\b",
+    r"\b(we\s+are|we're)\s+(together|dating|in\s+a\s+relationship)\b",
+    r"\b(i\s+want|i\s+would\s+like|i'd\s+like|i\s+plan)\s+to\s+(continue|keep|stay|build|start)\s+(talking|writing|chatting|texting|a\s+relationship|things|seeing\s+him|seeing\s+her|with\s+him|with\s+her)\b",
+    r"\b(i\s+want|i\s+would\s+like|i'd\s+like|i\s+plan)\s+to\s+(invite|bring|let)\s+(him|her|them)\s+(into|to|in)\b",
+    r"\b(i\s+(write|chat|text|talk|correspond)\s+(with|to)\s+him)\b",
+    r"\b(i\s+(write|chat|text|talk|correspond)\s+(with|to)\s+her)\b",
+    r"\b(pen[-\s]?pal|prison\s+pen[-\s]?pal)\b",
+    # RU
+    r"\b(мой|моя|мои)\s+(парень|девушка|партнер|партнёр|муж|жена|жених|невеста|избранник|избранница)\b",
+    r"\b(я\s+(встречаюсь|встречаемся|вместе)\s+с\s+ним)\b",
+    r"\b(я\s+(встречаюсь|встречаемся|вместе)\s+с\s+ней)\b",
+    r"\b(я\s+(люблю|обожаю)\s+(его|её|ее))\b",
+    r"\b(мы\s+(вместе|встречаемся|пара|в\s+отношениях))\b",
+    r"\b(я\s+хочу|хочу|мне\s+хочется|планирую)\s+(продолжать|продолжить|сохранить|строить|начать)\s+(переписку|общение|отношения|общаться|переписываться|с\s+ним|с\s+ней|быть\s+с\s+ним|быть\s+с\s+ней)\b",
+    r"\b(я\s+хочу|хочу|мне\s+хочется|планирую)\s+(пригласить|позвать|привести|впустить)\s+(его|её|ее|их)\b",
+    r"\b(я\s+(переписываюсь|общаюсь|пишу|разговариваю)\s+с\s+ним)\b",
+    r"\b(я\s+(переписываюсь|общаюсь|пишу|разговариваю)\s+с\s+ней)\b",
+    r"\b(сближаться|сблизиться)\s+с\s+(ним|ней|ними)\b",
+]
+
+MINIMIZATION_PATTERNS = [
+    # EN
+    r"\b(i\s+am|i'm|im)\s+not\s+afraid\b",
+    r"\b(i\s+(trust|believe\s+in))\s+him\b",
+    r"\b(i\s+(trust|believe\s+in))\s+her\b",
+    r"\b(he|she)\s+(has\s+)?(repented|changed|is\s+a\s+changed\s+(man|woman|person)|deserves\s+a\s+second\s+chance)\b",
+    r"\b(my|the)\s+(only\s+)?chance\s+(for|at|of)\s+(happiness|love|family)\b",
+    r"\b(he|she)\s+(is\s+)?(my)\s+chance\b",
+    r"\b(he|she)\s+is\s+(actually\s+)?(a\s+)?(good|kind|gentle|loving)\s+(man|woman|person|guy|soul)\b",
+    r"\b(everyone\s+deserves|deserves)\s+(a\s+)?second\s+chance\b",
+    # RU
+    r"\b(мне\s+не\s+страшно|я\s+не\s+бо(юсь|юсь\s+его|юсь\s+её|юсь\s+ее))\b",
+    r"\b(я\s+(уверена|уверен)\s+(в\s+нём|в\s+нем|в\s+ней|что\s+он|что\s+она))\b",
+    r"\b(он|она)\s+(раскаялся|раскаялась|раскаивается|изменился|изменилась|стал\s+другим|стала\s+другой)\b",
+    r"\b(это\s+)?(мой|единственный)\s+шанс\s+(на\s+(счастье|любовь|семью)|быть\s+счастлив\w+)\b",
+    r"\b(он|она)\s+(мой|моя)\s+шанс\b",
+    r"\b(он|она)\s+(на\s+самом\s+деле\s+)?(хороший|добрый|нежный|любящий)\s+(человек|парень|мужчина|женщина|душа)\b",
+    r"\b(каждый\s+заслуживает|заслуживает)\s+(второй\s+|еще\s+один\s+|ещё\s+один\s+)?шанс\b",
+]
+
+CHILDREN_PRESENT_PATTERNS = [
+    # EN
+    r"\b(my|our)\s+(child|children|kid|kids|son|daughter|daughters|sons|baby|babies)\b",
+    r"\b(kids|children)\s+(at\s+home|in\s+the\s+house|around|with\s+me)\b",
+    r"\bi\s+have\s+(a\s+)?(child|children|kid|kids|son|daughter|baby)\b",
+    # RU
+    r"\b(мой|моя|мои|наш|наша|наши)\s+(ребенок|ребёнок|дети|сын|дочь|дочка|малыш|младенец|сыновья|дочери)\b",
+    r"\b(дома|со\s+мной|рядом|в\s+доме)\s+(дети|ребенок|ребёнок|малыш|малыши)\b",
+    r"\b(у\s+меня|у\s+нас)\s+(дома\s+)?(дети|ребенок|ребёнок|сын|дочь|дочка|малыш)\b",
+]
+
+
 def check_crisis(message):
     """
     Проверяет, есть ли в сообщении признаки кризиса.
@@ -236,6 +316,54 @@ def check_fraud_financial_pressure(message):
         if re.search(pattern, message_lower):
             logger.warning(f"FRAUD/FINANCIAL PRESSURE SAFETY CASE DETECTED: {reason}")
             return "high", reason
+
+    return "none", None
+
+
+def check_dangerous_partner_or_criminal_risk(message):
+    """
+    Проверяет, описывает ли пользователь романтическую вовлечённость
+    в человека с серьёзным криминальным контекстом (тюрьма за насильственные
+    преступления, убийство, изнасилование) и/или минимизирует риск,
+    хочет сближаться, либо упоминает уязвимых детей рядом.
+
+    Триггер: criminal_context AND (romantic_involvement OR minimization OR children_present).
+    Возвращает ('high', reason) или ('none', None).
+    """
+    if not message:
+        return "none", None
+
+    message_lower = message.lower()
+
+    has_criminal_context = any(
+        re.search(pattern, message_lower) for pattern in CRIMINAL_CONTEXT_PATTERNS
+    )
+    if not has_criminal_context:
+        return "none", None
+
+    has_romantic = any(
+        re.search(pattern, message_lower) for pattern in ROMANTIC_INVOLVEMENT_PATTERNS
+    )
+    has_minimization = any(
+        re.search(pattern, message_lower) for pattern in MINIMIZATION_PATTERNS
+    )
+    has_children = any(
+        re.search(pattern, message_lower) for pattern in CHILDREN_PRESENT_PATTERNS
+    )
+
+    if has_romantic or has_minimization or has_children:
+        signals = []
+        if has_romantic:
+            signals.append("romantic_involvement")
+        if has_minimization:
+            signals.append("minimization")
+        if has_children:
+            signals.append("children_present")
+        reason = "criminal_context+" + "|".join(signals)
+        logger.warning(
+            f"DANGEROUS PARTNER / CRIMINAL RISK SAFETY CASE DETECTED: {reason}"
+        )
+        return "high", reason
 
     return "none", None
 
@@ -317,7 +445,8 @@ def check_history_for_safety_flags(conversation_history):
     """
     Сканирует conversation_history на наличие прошлых red flags.
     Возвращает True, если хотя бы одно user-сообщение содержало
-    crisis, abuse/violence или fraud/financial-pressure триггер.
+    crisis, abuse/violence, fraud/financial-pressure или
+    dangerous-partner / criminal-risk триггер.
     """
     if not conversation_history:
         return False
@@ -334,6 +463,9 @@ def check_history_for_safety_flags(conversation_history):
             return True
         fraud_level, _ = check_fraud_financial_pressure(content)
         if fraud_level == "high":
+            return True
+        dangerous_level, _ = check_dangerous_partner_or_criminal_risk(content)
+        if dangerous_level == "high":
             return True
 
     return False
@@ -386,6 +518,67 @@ def get_fraud_financial_response(language="en", reason=None):
         "risk_level": "high",
         "safety_mode": True,
         "safety_category": "fraud_blackmail_financial_pressure",
+        "show_technique": False,
+        "needs_specialist_support": True,
+    }
+
+
+def get_dangerous_partner_response(language="en", reason=None):
+    """Safety-ответ при романтической вовлечённости с человеком, имеющим
+    серьёзный криминальный контекст (тюрьма за насильственные преступления,
+    убийство, изнасилование), и/или при минимизации риска, желании сближаться,
+    наличии уязвимых детей рядом."""
+    from prompts import normalize_language
+
+    current_language = normalize_language(language)
+
+    if current_language == "ru":
+        return {
+            "message": (
+                "Спасибо, что поделился этим. То, что ты описываешь, — серьёзный red flag, "
+                "а не обычная история отношений. Сближение с человеком, у которого в прошлом "
+                "тяжёлые насильственные преступления или который сейчас отбывает срок за такие "
+                "преступления, несёт реальный риск для тебя и людей рядом, особенно для детей. "
+                "Сейчас важно не принимать решений в одиночку и под влиянием чувств. "
+                "Не приглашай этого человека ближе к себе или к детям без профессиональной "
+                "оценки риска. Обратись к психологу или специалисту, который работает с "
+                "domestic violence / risk assessment, и обсуди ситуацию с доверенным человеком."
+            ),
+            "detected_state": "safety_risk",
+            "suggested_technique": "Профессиональная оценка риска",
+            "technique_description": (
+                "Не решай в одиночку и не сближай этого человека с собой или детьми. "
+                "Запиши факты, обратись к психологу или специалисту по оценке риска, "
+                "поговори с доверенным человеком."
+            ),
+            "risk_level": "high",
+            "safety_mode": True,
+            "safety_category": "dangerous_partner_or_criminal_risk",
+            "show_technique": False,
+            "needs_specialist_support": True,
+        }
+
+    return {
+        "message": (
+            "Thank you for sharing this. What you describe is a serious red flag, not a normal "
+            "relationship story. Getting closer to a person with a history of serious violent "
+            "crimes — or someone currently serving time for such crimes — carries a real risk "
+            "to you and to the people around you, especially children. Please do not make this "
+            "decision alone or under the weight of feelings. Do not bring this person closer to "
+            "you or to your children without a professional risk assessment. Talk to a "
+            "psychologist or a specialist who works with domestic violence and risk assessment, "
+            "and share the situation with a trusted person."
+        ),
+        "detected_state": "safety_risk",
+        "suggested_technique": "Professional risk assessment",
+        "technique_description": (
+            "Do not decide alone and do not bring this person closer to you or your children. "
+            "Write down the facts, contact a psychologist or risk-assessment specialist, "
+            "and talk to a trusted person."
+        ),
+        "risk_level": "high",
+        "safety_mode": True,
+        "safety_category": "dangerous_partner_or_criminal_risk",
         "show_technique": False,
         "needs_specialist_support": True,
     }

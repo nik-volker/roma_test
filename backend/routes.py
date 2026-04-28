@@ -7,10 +7,12 @@ from safety_check import (
     check_crisis,
     check_abuse_violence,
     check_fraud_financial_pressure,
+    check_dangerous_partner_or_criminal_risk,
     check_history_for_safety_flags,
     get_crisis_response,
     get_abuse_violence_response,
     get_fraud_financial_response,
+    get_dangerous_partner_response,
     get_safety_mode_followup_response,
 )
 from prompts import infer_response_language
@@ -91,7 +93,25 @@ def chat():
                 200,
             )
 
-        # 4. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
+        # 4. Проверяем признаки dangerous partner / criminal risk
+        dangerous_risk, dangerous_reason = check_dangerous_partner_or_criminal_risk(
+            user_message
+        )
+        if dangerous_risk == "high":
+            logger.warning(
+                f"Dangerous partner / criminal risk safety case detected: {dangerous_reason}"
+            )
+            session["safety_mode"] = True
+            return (
+                jsonify(
+                    get_dangerous_partner_response(
+                        language=language, reason=dangerous_reason
+                    )
+                ),
+                200,
+            )
+
+        # 5. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
         #    Проверяем session cookie И историю (на случай потери cookie).
         if session.get("safety_mode") or check_history_for_safety_flags(
             conversation_history

@@ -8,9 +8,11 @@ from safety_check import (
     check_crisis,
     check_abuse_violence,
     check_fraud_financial_pressure,
+    check_dangerous_partner_or_criminal_risk,
     get_crisis_response,
     get_abuse_violence_response,
     get_fraud_financial_response,
+    get_dangerous_partner_response,
 )
 
 
@@ -162,6 +164,89 @@ class SafetyChecksTestCase(unittest.TestCase):
     def test_false_positive_he_earns_more_ru(self):
         risk, _ = check_fraud_financial_pressure(
             "Он зарабатывает больше меня и это иногда напрягает"
+        )
+        self.assertEqual(risk, "none")
+
+    # ------------------------------------------------------------------
+    # Dangerous partner / criminal risk detection
+    # ------------------------------------------------------------------
+
+    def test_dangerous_partner_prison_murder_minimization_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он сидит за убийство, но я уверена, что он хороший человек"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("minimization", reason)
+
+    def test_dangerous_partner_rape_continue_contact_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он изнасиловал людей, но я хочу продолжать с ним общаться"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("romantic_involvement", reason)
+
+    def test_dangerous_partner_release_invite_with_children_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "У меня дома дети, а он скоро выходит из тюрьмы, я хочу его пригласить"
+        )
+        self.assertEqual(risk, "high")
+        self.assertTrue(
+            "romantic_involvement" in reason or "children_present" in reason
+        )
+
+    def test_dangerous_partner_prison_murder_chance_for_happiness_en(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "He is in prison for murder but I think he is my chance for happiness"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("minimization", reason)
+
+    def test_dangerous_partner_response_shape(self):
+        response_en = get_dangerous_partner_response("en")
+        self.assertEqual(response_en.get("detected_state"), "safety_risk")
+        self.assertEqual(response_en.get("risk_level"), "high")
+        self.assertTrue(response_en.get("safety_mode"))
+        self.assertFalse(response_en.get("show_technique"))
+        self.assertEqual(
+            response_en.get("safety_category"), "dangerous_partner_or_criminal_risk"
+        )
+        self.assertTrue(response_en.get("needs_specialist_support"))
+
+        response_ru = get_dangerous_partner_response("ru")
+        self.assertFalse(response_ru.get("show_technique"))
+        self.assertEqual(
+            response_ru.get("safety_category"), "dangerous_partner_or_criminal_risk"
+        )
+
+    # ------------------------------------------------------------------
+    # Dangerous partner — false positives
+    # ------------------------------------------------------------------
+
+    def test_false_positive_movie_about_prisoner_ru(self):
+        """Watching a movie about a prisoner must NOT activate safety."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "Я смотрела фильм про человека в тюрьме"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_partner_received_a_fine_ru(self):
+        """A minor offence (a fine) must NOT activate dangerous-partner safety."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "Мой партнер когда-то получил штраф"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_news_about_crime_en(self):
+        """Discussing news about a crime, no romantic context — no trigger."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "I read in the news that he is in prison for murder"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_normal_relationship_no_criminal_context(self):
+        """No criminal context at all — no trigger even with romantic + children."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "My boyfriend is great, I have a child and want to invite him over"
         )
         self.assertEqual(risk, "none")
 
