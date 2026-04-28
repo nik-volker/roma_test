@@ -124,6 +124,25 @@ def chat():
 
         ai_response = call_openai(user_message, conversation_history, language=language)
 
+        # Post-processing: даже если pre-call детектор не сработал и модель не пометила
+        # risk_level=high, заново проверяем user_message на dangerous-partner / criminal-risk.
+        # На risk_level из ответа модели полагаться нельзя.
+        post_dangerous_risk, post_dangerous_reason = (
+            check_dangerous_partner_or_criminal_risk(user_message)
+        )
+        if post_dangerous_risk == "high":
+            logger.warning(
+                f"Post-processing dangerous partner / criminal risk detected: "
+                f"{post_dangerous_reason}"
+            )
+            session["safety_mode"] = True
+            safety_response = get_dangerous_partner_response(
+                language=language, reason=post_dangerous_reason
+            )
+            safety_response["suggested_technique"] = ""
+            safety_response["technique_description"] = ""
+            return jsonify(safety_response), 200
+
         # Подстраховка: если модель сама помечает risk_level=high, активируем safety mode
         # и скрываем технику, чтобы фронт не отрендерил её.
         if ai_response.get("risk_level") == "high":

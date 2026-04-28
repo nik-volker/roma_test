@@ -250,6 +250,74 @@ class SafetyChecksTestCase(unittest.TestCase):
         )
         self.assertEqual(risk, "none")
 
+    # ------------------------------------------------------------------
+    # Dangerous partner — address disclosure signal
+    # ------------------------------------------------------------------
+
+    def test_dangerous_partner_address_disclosure_en(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "He is in prison for murder and he knows my address"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("address_disclosure", reason)
+
+    def test_dangerous_partner_address_disclosure_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он сидит за убийство, и я дала ему свой адрес"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("address_disclosure", reason)
+
+    def test_dangerous_partner_wants_to_come_home_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он сидел за изнасилование, он хочет приехать ко мне"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("address_disclosure", reason)
+
+    # ------------------------------------------------------------------
+    # Dangerous partner — prison release signal
+    # ------------------------------------------------------------------
+
+    def test_dangerous_partner_prison_release_parole_en(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "He was convicted of murder and is getting out on parole"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("prison_release", reason)
+
+    def test_dangerous_partner_prison_release_udo_ru(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "Он сидит за убийство, скоро выходит по УДО"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("prison_release", reason)
+
+    def test_dangerous_partner_release_next_month_en(self):
+        risk, reason = check_dangerous_partner_or_criminal_risk(
+            "He is in prison for sexual assault and will be released next month"
+        )
+        self.assertEqual(risk, "high")
+        self.assertIn("prison_release", reason)
+
+    # ------------------------------------------------------------------
+    # Dangerous partner — false positives for new signals
+    # ------------------------------------------------------------------
+
+    def test_false_positive_address_without_criminal_context(self):
+        """Address disclosure alone, no criminal context — no trigger."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "He knows my address because we live together"
+        )
+        self.assertEqual(risk, "none")
+
+    def test_false_positive_parole_without_criminal_context(self):
+        """Mentioning parole alone (no criminal context match) — no trigger."""
+        risk, _ = check_dangerous_partner_or_criminal_risk(
+            "I read an article about parole reform"
+        )
+        self.assertEqual(risk, "none")
+
 
 if __name__ == "__main__":
     unittest.main()

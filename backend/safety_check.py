@@ -262,6 +262,38 @@ CHILDREN_PRESENT_PATTERNS = [
     r"\b(у\s+меня|у\s+нас)\s+(дома\s+)?(дети|ребенок|ребёнок|сын|дочь|дочка|малыш)\b",
 ]
 
+ADDRESS_DISCLOSURE_PATTERNS = [
+    # EN
+    r"\b(he|she|they)\s+knows?\s+my\s+address\b",
+    r"\b(he|she|they)\s+knows?\s+where\s+i\s+live\b",
+    r"\b(he|she|they)\s+(has|have)\s+my\s+address\b",
+    r"\bi\s+(gave|sent|told|shared)\s+(him|her|them)\s+(my\s+)?address\b",
+    r"\b(he|she|they)\s+wants?\s+to\s+come\s+to\s+(my\s+(home|place|house)|me)\b",
+    r"\b(he|she|they)\s+(is|are)\s+coming\s+to\s+my\s+(home|place|house)\b",
+    # RU
+    r"\b(он|она|они)\s+зна(ет|ют)\s+мой\s+адрес\b",
+    r"\b(он|она|они)\s+зна(ет|ют)\s+где\s+я\s+живу\b",
+    r"\b(у\s+него|у\s+неё|у\s+нее|у\s+них)\s+мой\s+адрес\b",
+    r"\bя\s+дал(а)?\s+(ему|ей|им)\s+(свой\s+)?адрес\b",
+    r"\b(он|она|они)\s+(придет|придёт|приедет|придут|приедут)\s+ко\s+мне(\s+(домой|в\s+гости))?\b",
+    r"\b(он|она|они)\s+хоч(ет|ут)\s+приехать\s+ко\s+мне\b",
+]
+
+PRISON_RELEASE_PATTERNS = [
+    # EN
+    r"\bgetting\s+out\s+(soon|next\s+(week|month|year))\b",
+    r"\bwill\s+be\s+released\b",
+    r"\breleased\s+from\s+(prison|jail)\b",
+    r"\b(out\s+on\s+|on\s+)?parole\b",
+    # RU
+    r"\bскоро\s+выходит\b",
+    r"\bвыходит\s+на\s+свободу\b",
+    r"\bвыйдет\s+из\s+(тюрьмы|колонии|сизо|зоны)\b",
+    r"\bвыйдет\s+через\s+(месяц|неделю|год|две\s+недели|пару\s+(месяцев|недель))\b",
+    r"\bудо\b",
+    r"\bусловно[-\s]досрочн\w+\b",
+]
+
 
 def check_crisis(message):
     """
@@ -325,9 +357,12 @@ def check_dangerous_partner_or_criminal_risk(message):
     Проверяет, описывает ли пользователь романтическую вовлечённость
     в человека с серьёзным криминальным контекстом (тюрьма за насильственные
     преступления, убийство, изнасилование) и/или минимизирует риск,
-    хочет сближаться, либо упоминает уязвимых детей рядом.
+    хочет сближаться, упоминает уязвимых детей рядом, раскрывает свой адрес
+    или упоминает скорый выход на свободу.
 
-    Триггер: criminal_context AND (romantic_involvement OR minimization OR children_present).
+    Триггер: criminal_context AND
+    (romantic_involvement OR minimization OR children_present OR
+     address_disclosure OR prison_release).
     Возвращает ('high', reason) или ('none', None).
     """
     if not message:
@@ -350,8 +385,20 @@ def check_dangerous_partner_or_criminal_risk(message):
     has_children = any(
         re.search(pattern, message_lower) for pattern in CHILDREN_PRESENT_PATTERNS
     )
+    has_address = any(
+        re.search(pattern, message_lower) for pattern in ADDRESS_DISCLOSURE_PATTERNS
+    )
+    has_prison_release = any(
+        re.search(pattern, message_lower) for pattern in PRISON_RELEASE_PATTERNS
+    )
 
-    if has_romantic or has_minimization or has_children:
+    if (
+        has_romantic
+        or has_minimization
+        or has_children
+        or has_address
+        or has_prison_release
+    ):
         signals = []
         if has_romantic:
             signals.append("romantic_involvement")
@@ -359,6 +406,10 @@ def check_dangerous_partner_or_criminal_risk(message):
             signals.append("minimization")
         if has_children:
             signals.append("children_present")
+        if has_address:
+            signals.append("address_disclosure")
+        if has_prison_release:
+            signals.append("prison_release")
         reason = "criminal_context+" + "|".join(signals)
         logger.warning(
             f"DANGEROUS PARTNER / CRIMINAL RISK SAFETY CASE DETECTED: {reason}"
