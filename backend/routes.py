@@ -6,9 +6,11 @@ from ai_service import call_openai
 from safety_check import (
     check_crisis,
     check_abuse_violence,
+    check_fraud_financial_pressure,
     check_history_for_safety_flags,
     get_crisis_response,
     get_abuse_violence_response,
+    get_fraud_financial_response,
     get_safety_mode_followup_response,
 )
 from prompts import infer_response_language
@@ -79,7 +81,17 @@ def chat():
             session["safety_mode"] = True
             return jsonify(get_abuse_violence_response(language=language)), 200
 
-        # 3. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
+        # 3. Проверяем признаки fraud / blackmail / financial pressure
+        fraud_risk, fraud_reason = check_fraud_financial_pressure(user_message)
+        if fraud_risk == "high":
+            logger.warning(f"Fraud/financial pressure safety case detected: {fraud_reason}")
+            session["safety_mode"] = True
+            return (
+                jsonify(get_fraud_financial_response(language=language, reason=fraud_reason)),
+                200,
+            )
+
+        # 4. Если safety-mode уже активирован в этой сессии, не возвращаемся в обычный flow.
         #    Проверяем session cookie И историю (на случай потери cookie).
         if session.get("safety_mode") or check_history_for_safety_flags(
             conversation_history
@@ -91,6 +103,16 @@ def chat():
             return jsonify(get_safety_mode_followup_response(language=language)), 200
 
         ai_response = call_openai(user_message, conversation_history, language=language)
+
+        # Подстраховка: если модель сама помечает risk_level=high, активируем safety mode
+        # и скрываем технику, чтобы фронт не отрендерил её.
+        if ai_response.get("risk_level") == "high":
+            logger.warning("Model returned risk_level=high, enforcing safety mode")
+            session["safety_mode"] = True
+            ai_response["safety_mode"] = True
+            ai_response["show_technique"] = False
+            ai_response.setdefault("safety_category", "model_high_risk")
+            ai_response.setdefault("needs_specialist_support", True)
 
         logger.info(
             f"Chat response: detected_state={ai_response.get('detected_state')}"

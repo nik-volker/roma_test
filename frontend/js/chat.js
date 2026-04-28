@@ -58,8 +58,12 @@ export class ChatUI {
             '',
         ];
         const hasTechnique = rawTechnique && !invalidTechniques.includes(rawTechnique.toLowerCase().trim());
-        const suggestedTechnique = hasTechnique ? rawTechnique : null;
-        const techniqueDescription = hasTechnique ? (response?.technique_description || '') : null;
+        // Backend authoritative flags: explicit show_technique=false OR safety_mode=true hide the technique.
+        // Fallback to hasTechnique for backward compatibility with older backends without these fields.
+        const backendBlocksTechnique = response?.show_technique === false || response?.safety_mode === true;
+        const showTechnique = hasTechnique && !backendBlocksTechnique;
+        const suggestedTechnique = showTechnique ? rawTechnique : null;
+        const techniqueDescription = showTechnique ? (response?.technique_description || '') : null;
 
         const messageEl = document.createElement('div');
         messageEl.className = 'message message-ai';
@@ -74,7 +78,7 @@ export class ChatUI {
                 <strong>${this.escapeHtml(this.translate('stateLabel'))}:</strong> ${this.escapeHtml(stateLabel)}
             </div>
             ` : ''}
-            ${hasTechnique ? `
+            ${showTechnique ? `
             <div class="technique-suggestion">
                 <strong>${this.escapeHtml(this.translate('techniqueLabel'))}:</strong> <em>${this.escapeHtml(suggestedTechnique)}</em><br>
                 <span class="technique-desc">${this.escapeHtml(techniqueDescription)}</span>

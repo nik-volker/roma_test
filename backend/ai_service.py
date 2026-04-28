@@ -71,6 +71,8 @@ def _default_response(language, message=None, technique=None, description=None):
         "suggested_technique": technique or localized["technique"],
         "technique_description": description or localized["description"],
         "risk_level": "none",
+        "safety_mode": False,
+        "show_technique": True,
     }
 
 

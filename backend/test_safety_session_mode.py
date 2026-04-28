@@ -254,6 +254,123 @@ class SafetySessionModeRouteTestCase(unittest.TestCase):
         self.assertNotEqual(payload.get("risk_level"), "high")
         self.assertFalse(payload.get("safety_mode", False))
 
+    # ------------------------------------------------------------------
+    # show_technique flag — backend tells frontend whether to render technique
+    # ------------------------------------------------------------------
+
+    def test_suicidal_crisis_route_hides_technique(self):
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "I do not want to live",
+                "history": [{"role": "user", "content": "I do not want to live"}],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload.get("risk_level"), "high")
+        self.assertTrue(payload.get("safety_mode"))
+        self.assertFalse(payload.get("show_technique"))
+        self.assertEqual(payload.get("safety_category"), "crisis")
+
+    def test_physical_abuse_route_hides_technique(self):
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "My husband hits me",
+                "history": [{"role": "user", "content": "My husband hits me"}],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload.get("safety_mode"))
+        self.assertFalse(payload.get("show_technique"))
+        self.assertEqual(payload.get("safety_category"), "abuse_violence")
+
+    def test_fraud_take_loan_route_hides_technique(self):
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "He asked me to take a loan for him",
+                "history": [
+                    {
+                        "role": "user",
+                        "content": "He asked me to take a loan for him",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload.get("risk_level"), "high")
+        self.assertTrue(payload.get("safety_mode"))
+        self.assertFalse(payload.get("show_technique"))
+        self.assertEqual(
+            payload.get("safety_category"),
+            "fraud_blackmail_financial_pressure",
+        )
+
+    def test_fraud_blackmail_route_hides_technique_ru(self):
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "Он шантажирует меня и требует деньги",
+                "history": [
+                    {
+                        "role": "user",
+                        "content": "Он шантажирует меня и требует деньги",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload.get("safety_mode"))
+        self.assertFalse(payload.get("show_technique"))
+        self.assertEqual(
+            payload.get("safety_category"),
+            "fraud_blackmail_financial_pressure",
+        )
+
+    def test_normal_finance_topic_does_not_trigger_fraud_safety(self):
+        """False-positive guard: normal financial discussions stay in normal flow."""
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "We share expenses and sometimes argue about it",
+                "history": [
+                    {
+                        "role": "user",
+                        "content": "We share expenses and sometimes argue about it",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload.get("safety_mode", False))
+        self.assertNotEqual(
+            payload.get("safety_category"),
+            "fraud_blackmail_financial_pressure",
+        )
+        # show_technique must not be False — either True (new clients) or absent (legacy parity).
+        self.assertNotEqual(payload.get("show_technique"), False)
+
+    def test_normal_family_budget_does_not_trigger_fraud_safety_ru(self):
+        response = self.client.post(
+            "/api/chat",
+            json={
+                "message": "Мы обсуждаем семейный бюджет",
+                "history": [
+                    {"role": "user", "content": "Мы обсуждаем семейный бюджет"}
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload.get("safety_mode", False))
+        self.assertNotEqual(payload.get("show_technique"), False)
+
 
 if __name__ == "__main__":
     unittest.main()
